@@ -17,13 +17,19 @@ class ReportList(object):
         self._results = results
         self.report_view = report_view
         self._fields = self.report_view.get_fields()
+        if self._fields is None:
+            if self._results:
+                self._fields = self._results[0].keys()
+            else:
+                self._fields = []
 
     @property
     def fields(self):
-        fields = self._fields
-        if fields is None and self._results:
-            fields = self._results[0].keys()
-        return fields or []
+        for field in self._fields:
+            if isinstance(field, (list, tuple)):
+                yield field
+            else: # str, unicode
+                yield (field, ' '.join([s.title() for s in field.split('_')]))
 
     @property
     def results(self):
@@ -37,7 +43,7 @@ class ReportList(object):
             yield self._items(record)
 
     def _items(self, record):
-        for field in self.fields:
+        for field, _ in self.fields:
             try:
                 attr_field = getattr(self.report_view, field)
             except AttributeError:
@@ -52,7 +58,6 @@ class ReportView(TemplateView, FormMixin):
     title = ''
     fields = None
 
-    # TODO: Handle fields labels
     # TODO: sortables columns (?)
 
     @login_required_m

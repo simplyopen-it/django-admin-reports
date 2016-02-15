@@ -51,9 +51,9 @@
             <table id="result_list" class="table table-striped table-bordered table-hover table-condensed">
               <thead>
                 <tr>
-                  {% for field in rl.fields %}
+                  {% for field, label in rl.fields %}
                     <th scope="col">
-                      {{ field }}
+                      {{ label }}
                     </th>
                   {% endfor %}
                 </tr>
