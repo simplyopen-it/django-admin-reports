@@ -1,5 +1,5 @@
 {% extends "admin/base_site.html" %}
-{% load i18n admin_static %}
+{% load i18n admin_static dict_filters %}
 
 {% block extrastyle %}
   {{ block.super }}
@@ -62,8 +62,11 @@
               <tbody>
                 {% for result in results %}
                   <tr>
-                    {% for item in result %}
+                    {% for field in fields %}
+                      {% comment %}
                       <td>{{ item }}</td>
+                      {% endcomment %}
+                      <td>{{ result|get:field }}</td>
                     {% endfor %}
                   </tr>
                 {% endfor %}

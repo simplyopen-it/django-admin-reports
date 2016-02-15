@@ -33,10 +33,9 @@ class ReportView(TemplateView, FormMixin):
         })
         if form.is_valid():
             results = self.aggregate(form)
-            fields = self.get_fields(results)
             kwargs.update({
-                'results': self.sort_fields(results, fields),
-                'fields': fields,
+                'results': results,
+                'fields': self.fields,
             })
         return kwargs
 
