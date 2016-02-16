@@ -1,5 +1,5 @@
 {% extends "admin/base_site.html" %}
-{% load i18n admin_urls admin_static admin_list%}
+{% load i18n admin_urls admin_static %}
 
 {% block extrastyle %}
   {{ block.super }}
@@ -20,10 +20,6 @@
   {% endif %}
 {% endblock %}
 
-{% block title %}
-  {% load suit_tags %}{% block branding %}{{ 'ADMIN_NAME'|suit_conf }}{% endblock %} | {{ title }}
-{% endblock %}
-
 {% block bodyclass %}report{% endblock %}
 
 {% block coltype %}flex{% endblock %}
@@ -31,6 +27,20 @@
 {% block content %}
   <div id="content-main">
     <div class="inner-center-column">
+      {% comment %}
+      TODO: improve styling of title and help_text
+      {% endcomment %}
+      <div id="title" class="title clearfix">
+        {% block title_text %}
+          <h3>{{ title }}</h3>
+        {% endblock %}
+      </div>
+
+      <div id="help-text" class="help clearfix">
+        {% block help_text %}
+          {{ help_text }}
+        {% endblock %}
+      </div>
 
       <div class="toolbar-content clearfix">
         {% block search %}
@@ -76,7 +86,7 @@
           {% endif %}
         {% endblock %}
       </div>
-
     </div>
   </div>
+
 {% endblock %}

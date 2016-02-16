@@ -5,6 +5,7 @@ from django.views.generic.edit import FormMixin
 from django.views.generic import TemplateView
 from django.contrib.admin.templatetags.admin_static import static
 from django.contrib.admin import site
+from django.utils.safestring import mark_safe
 from django.utils.decorators import method_decorator
 try:
     from pandas import DataFrame
@@ -19,7 +20,7 @@ class ReportList(object):
     def __init__(self, report_view, results):
         self._results = results
         self.report_view = report_view
-        self._fields = self.report_view.get_fields()
+        self._fields = report_view.get_fields()
         if self._fields is None:
             if self._results:
                 self._fields = self._results[0].keys()
@@ -33,6 +34,16 @@ class ReportList(object):
                 yield field
             else: # str, unicode
                 yield (field, ' '.join([s.title() for s in field.split('_')]))
+
+    @property
+    def result_count(self):
+        if isinstance(self._results, QuerySet):
+            ret = self._results.count()
+        elif DataFrame is not None and isinstance(self._results, DataFrame):
+            ret = self._results.count()
+        else:
+            ret = len(self._results)
+        return ret
 
     @property
     def results(self):
@@ -62,6 +73,7 @@ class ReportView(TemplateView, FormMixin):
     template_name = 'admin/report.html'
     title = ''
     fields = None
+    help_text = ''
 
     @admin_view_m
     def dispatch(self, request, *args, **kwargs):
@@ -103,6 +115,7 @@ class ReportView(TemplateView, FormMixin):
         kwargs.update({
             'title': self.get_title(),
             'has_filters': self.get_form_class() is not None,
+            'help_text': self.get_help_text(),
         })
         form = self.get_form(self.get_form_class())
         if form is not None:
@@ -122,6 +135,9 @@ class ReportView(TemplateView, FormMixin):
 
     def get_fields(self):
         return self.fields
+
+    def get_help_text(self):
+        return mark_safe(self.help_text)
 
     def aggregate(self, form=None):
         ''' Implement here your data elaboration.
