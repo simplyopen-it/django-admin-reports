@@ -34,7 +34,7 @@ class ReportList(object):
     @property
     def results(self):
         if isinstance(self._results, QuerySet):
-            records = self._results.values(self.fields)
+            records = self._results.values(*[field for field, _ in self.fields])
         elif DataFrame is not None and isinstance(self._results, DataFrame):
             records = self._results.reset_index().T.to_dict().values()
         else:
