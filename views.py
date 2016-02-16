@@ -1,3 +1,6 @@
+from django import forms
+from django.conf import settings
+from django.contrib.admin.templatetags.admin_static import static
 from django.db.models import QuerySet
 from django.views.generic.edit import FormMixin
 from django.views.generic import TemplateView
@@ -54,26 +57,43 @@ class ReportList(object):
 
 
 class ReportView(TemplateView, FormMixin):
-    template_name = 'report.html'
+    template_name = 'admin/report.html'
     title = ''
     fields = None
-
-    # TODO: sortables columns (?)
 
     @login_required_m
     def dispatch(self, request, *args, **kwargs):
         return super(ReportView, self).dispatch(request, *args, **kwargs)
 
+    @property
+    def media(self):
+        # taken from django.contrib.admin.options ModelAdmin
+        extra = '' if settings.DEBUG else '.min'
+        js = [
+            'core.js',
+            'admin/RelatedObjectLookups.js',
+            'jquery%s.js' % extra,
+            'jquery.init.js'
+        ]
+        return forms.Media(js=[static('admin/js/%s' % url) for url in js])
+
     def get_form_kwargs(self):
         kwargs = super(ReportView, self).get_form_kwargs()
         if self.request.method == 'GET':
-            kwargs.update({
-                'data': self.request.GET,
-            })
+            if self.request.GET:
+                kwargs.update({
+                    'data': self.request.GET,
+                })
+            else:
+                kwargs.update({
+                    'data': kwargs['initial']
+                })
         return kwargs
 
+    # TODO: sortables columns (?)
     def get_context_data(self, **kwargs):
         kwargs = super(ReportView, self).get_context_data(**kwargs)
+        kwargs['media'] = self.media
         form = self.get_form(self.get_form_class())
         if 'form' not in kwargs:
             kwargs['form'] = form
@@ -81,6 +101,7 @@ class ReportView(TemplateView, FormMixin):
             'title': self.get_title(),
             'has_filters': self.get_form_class() is not None,
         })
+        # FIXME: What if form is None?
         if form.is_valid():
             results = self.aggregate(form)
             kwargs.update({
@@ -99,3 +120,5 @@ class ReportView(TemplateView, FormMixin):
         Must return a list of dict.
         '''
         raise NotImplementedError('Subclasses must implement this method')
+
+# TODO: admin url

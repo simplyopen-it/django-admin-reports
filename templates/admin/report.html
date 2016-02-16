@@ -1,11 +1,13 @@
 {% extends "admin/base_site.html" %}
-{% load i18n admin_static %}
+{% load i18n admin_urls admin_static admin_list%}
 
 {% block extrastyle %}
   {{ block.super }}
   <link rel="stylesheet" type="text/css" href="{% static "admin/css/changelists.css" %}" />
   {% if has_filters %}
     <link rel="stylesheet" type="text/css" href="{% static "admin/css/forms.css" %}" />
+    <script type="text/javascript" src="{% url 'admin:jsi18n' %}"></script>
+    {{ form.media.css }}
   {% endif %}
   {{ media.css }}
 {% endblock %}
@@ -13,6 +15,7 @@
 {% block extrahead %}
   {{ block.super }}
   {{ media.js }}
+  {{ form.media.js }}
 {% endblock %}
 
 {% block title %}
@@ -45,9 +48,9 @@
         {% endblock %}
       </div>
 
-      {% block result %}
-        {% if rl.results %}
-          <div class="results">
+      <div class="results">
+        {% block result %}
+          {% if rl.results %}
             <table id="result_list" class="table table-striped table-bordered table-hover table-condensed">
               <thead>
                 <tr>
@@ -68,9 +71,9 @@
                 {% endfor %}
               </tbody>
             </table>
-          </div>
-        {% endif %}
-      {% endblock %}
+          {% endif %}
+        {% endblock %}
+      </div>
 
     </div>
   </div>
