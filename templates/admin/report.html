@@ -15,7 +15,9 @@
 {% block extrahead %}
   {{ block.super }}
   {{ media.js }}
-  {{ form.media.js }}
+  {% if has_filters %}
+    {{ form.media.js }}
+  {% endif %}
 {% endblock %}
 
 {% block title %}

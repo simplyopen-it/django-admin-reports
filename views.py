@@ -1,17 +1,17 @@
 from django import forms
 from django.conf import settings
-from django.contrib.admin.templatetags.admin_static import static
 from django.db.models import QuerySet
 from django.views.generic.edit import FormMixin
 from django.views.generic import TemplateView
-from django.contrib.auth.decorators import login_required
+from django.contrib.admin.templatetags.admin_static import static
+from django.contrib.admin import site
 from django.utils.decorators import method_decorator
 try:
     from pandas import DataFrame
 except ImportError:
     DataFrame = None
 
-login_required_m = method_decorator(login_required)
+admin_view_m = method_decorator(site.admin_view)
 
 
 class ReportList(object):
@@ -36,6 +36,8 @@ class ReportList(object):
 
     @property
     def results(self):
+        # TODO: sort
+        # TODO: pagination
         if isinstance(self._results, QuerySet):
             records = self._results.values(*[field for field, _ in self.fields])
         elif DataFrame is not None and isinstance(self._results, DataFrame):
@@ -61,7 +63,7 @@ class ReportView(TemplateView, FormMixin):
     title = ''
     fields = None
 
-    @login_required_m
+    @admin_view_m
     def dispatch(self, request, *args, **kwargs):
         return super(ReportView, self).dispatch(request, *args, **kwargs)
 
@@ -90,23 +92,29 @@ class ReportView(TemplateView, FormMixin):
                 })
         return kwargs
 
-    # TODO: sortables columns (?)
+    def get_form(self, form_class):
+        if form_class is None:
+            return None
+        return super(ReportView, self).get_form(form_class)
+
     def get_context_data(self, **kwargs):
         kwargs = super(ReportView, self).get_context_data(**kwargs)
         kwargs['media'] = self.media
-        form = self.get_form(self.get_form_class())
-        if 'form' not in kwargs:
-            kwargs['form'] = form
         kwargs.update({
             'title': self.get_title(),
             'has_filters': self.get_form_class() is not None,
         })
-        # FIXME: What if form is None?
-        if form.is_valid():
-            results = self.aggregate(form)
-            kwargs.update({
-                'rl': ReportList(self, results),
-            })
+        form = self.get_form(self.get_form_class())
+        if form is not None:
+            if 'form' not in kwargs:
+                kwargs['form'] = form
+            if form.is_valid():
+                results = self.aggregate(form)
+        else:
+            results = self.aggregate()
+        kwargs.update({
+            'rl': ReportList(self, results),
+        })
         return kwargs
 
     def get_title(self):
@@ -115,10 +123,8 @@ class ReportView(TemplateView, FormMixin):
     def get_fields(self):
         return self.fields
 
-    def aggregate(self, form):
+    def aggregate(self, form=None):
         ''' Implement here your data elaboration.
         Must return a list of dict.
         '''
         raise NotImplementedError('Subclasses must implement this method')
-
-# TODO: admin url
