@@ -1,5 +1,5 @@
 {% extends "admin/base_site.html" %}
-{% load i18n admin_urls admin_static %}
+{% load i18n admin_urls admin_static admin_list %}
 
 {% block extrastyle %}
   {{ block.super }}
@@ -27,20 +27,23 @@
 {% block content %}
   <div id="content-main">
     <div class="inner-center-column">
-      {% comment %}
-      TODO: improve styling of title and help_text
-      {% endcomment %}
-      <div id="title" class="title clearfix">
-        {% block title_text %}
-          <h3>{{ title }}</h3>
-        {% endblock %}
-      </div>
 
-      <div id="help-text" class="help clearfix">
-        {% block help_text %}
+      {% block title_text %}
+        <div id="title" class="title clearfix" style="padding-left:10px;">
+          <h3 style="padding:0px;">{{ title }}</h3>
+        </div>
+
+        <div id="description" class="clerfix" style="padding-left:10px;">
+          {% if description %}<p>{{ description }}</p>{% endif %}
+          {% if help_text %}<span style="cursor:pointer; color:#295584; text-decoration:underline;" onclick="javascript:$('#help-text').toggle();">See more</span>{% endif %}
+        </div>
+
+        <div id="help-text" class="help clearfix" style="display:none; margin-top:5px; margin-bottom:5px; border:1px solid #f9f9f9; background:#fff; padding:10px; ">
           {{ help_text }}
-        {% endblock %}
-      </div>
+        </div>
+      {% endblock %}
+
+      <p>&nbsp;</p>
 
       <div class="toolbar-content clearfix">
         {% block search %}
@@ -86,6 +89,9 @@
           {% endif %}
         {% endblock %}
       </div>
+
+      {% block pagination %}{% pagination rl %}{% endblock %}
+
     </div>
   </div>
 
