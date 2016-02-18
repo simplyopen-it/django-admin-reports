@@ -310,7 +310,7 @@ class ReportView(TemplateView, FormMixin):
             if 'form' not in kwargs:
                 kwargs['form'] = form
             if form.is_valid():
-                results = self.aggregate(form)
+                results = self.aggregate(**form.cleaned_data)
             else:
                 results = []
         else:
@@ -343,7 +343,7 @@ class ReportView(TemplateView, FormMixin):
     def get_list_max_show_all(self):
         return self.get_list_max_show_all
 
-    def aggregate(self, form=None):
+    def aggregate(self, **kwargs):
         ''' Implement here your data elaboration.
         Must return a list of dict.
         '''
