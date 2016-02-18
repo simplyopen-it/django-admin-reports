@@ -45,13 +45,12 @@ class ReportList(object):
         self._fields = self.report_view.get_fields()
         # Guess fields if not defined
         if self._fields is None:
-            if results is not None:
-                if isinstance(results, QuerySet):
-                    self._fields = [field.name for field in results.query.get_meta().fields]
-                elif DataFrame is not None and isinstance(results, DataFrame):
-                    self._fields = [name for name in results.index.names] + list(results.columns)
-                else:
-                    self._fields = results[0].keys()
+            if isinstance(results, QuerySet):
+                self._fields = [field.name for field in results.query.get_meta().fields]
+            elif DataFrame is not None and isinstance(results, DataFrame) and not results.empty:
+                self._fields = [name for name in results.index.names if name is not None] + list(results.columns)
+            elif isinstance(results, (list, tuple)) and results:
+                self._fields = results[0].keys()
             else:
                 self._fields = []
         self.fields = []
@@ -64,7 +63,6 @@ class ReportList(object):
         self.num_sorted_fields = len(self.ordering_field_columns)
         self.full_result_count = self.get_result_count(results)
         self._results = self.get_results(results)
-
 
     def get_query_string(self, new_params=None, remove=None):
         if new_params is None:
