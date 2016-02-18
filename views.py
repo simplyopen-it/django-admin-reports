@@ -344,7 +344,7 @@ class ReportView(TemplateView, FormMixin):
         return self.list_per_page
 
     def get_list_max_show_all(self):
-        return self.get_list_max_show_all
+        return self.list_max_show_all
 
     def aggregate(self, **kwargs):
         ''' Implement here your data elaboration.
