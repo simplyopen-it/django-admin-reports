@@ -177,7 +177,10 @@ class ReportList(object):
                 yield record.get(field_name)
             else:
                 if callable(attr_field):
-                    yield attr_field(record)
+                    ret = attr_field(record)
+                    if getattr(attr_field, 'allow_tags', False):
+                        ret = mark_safe(ret)
+                    yield ret
 
     @property
     def results(self):
