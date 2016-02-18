@@ -26,17 +26,6 @@ CONTROL_VARS = [ALL_VAR, ORDER_VAR, PAGE_VAR]
 camel_re = re.compile('([a-z0-9])([A-Z])')
 
 
-# class ReportPaginator(Paginator):
-
-#     def _get_count(self):
-#         if DataFrame and isinstance(self.object_list, DataFrame):
-#             self._count = len(self.object_list)
-#         else:
-#             self._count = super(ReportPaginator, self)._get_count()
-#         return self._count
-#     count = property(_get_count)
-
-
 class ReportList(object):
 
     def __init__(self, report_view, results):
@@ -54,9 +43,15 @@ class ReportList(object):
         self.multi_page = False
         self.can_show_all = True
         self._fields = self.report_view.get_fields()
+        # Guess fields if not defined
         if self._fields is None:
-            if results:
-                self._fields = results[0].keys()
+            if results is not None:
+                if isinstance(results, QuerySet):
+                    self._fields = [field.name for field in results.query.get_meta().fields]
+                elif DataFrame is not None and isinstance(results, DataFrame):
+                    self._fields = [name for name in results.index.names] + list(results.columns)
+                else:
+                    self._fields = results[0].keys()
             else:
                 self._fields = []
         self.fields = []
@@ -69,6 +64,7 @@ class ReportList(object):
         self.num_sorted_fields = len(self.ordering_field_columns)
         self.full_result_count = self.get_result_count(results)
         self._results = self.get_results(results)
+
 
     def get_query_string(self, new_params=None, remove=None):
         if new_params is None:
@@ -249,7 +245,7 @@ class ReportList(object):
     def get_results(self, results):
         records = self.sort_results(results)
         if isinstance(records, QuerySet):
-            records = records.value(*[field for field, _ in self.fields])
+            records = records.values(*[field for field, _ in self.fields])
         elif DataFrame is not None and isinstance(records, DataFrame):
             records = records.to_dict(outtype='records')
         records = self.paginate(records)
