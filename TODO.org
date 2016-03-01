@@ -1,3 +1,0 @@
-* TODO make pagination relevant to impact aggregate() method's efficiency
-* DONE sortable results
-  CLOSED: [2016-02-18 Thu 10:04]

@@ -14,9 +14,10 @@ from django.utils.decorators import method_decorator
 from django.utils.http import urlencode
 from django.utils.html import format_html
 try:
+    pnd = True
     from pandas import DataFrame
 except ImportError:
-    DataFrame = None
+    pnd = False
 
 admin_view_m = method_decorator(site.admin_view)
 ALL_VAR = 'all'
@@ -34,6 +35,7 @@ class ReportList(object):
         self.params = dict(self.request.GET.items())
         self.list_per_page = self.report_view.get_list_per_page()
         self.list_max_show_all = self.report_view.get_list_max_show_all()
+        self.formatting = self.report_view.get_formatting()
         try:
             self.page_num = int(self.request.GET.get(PAGE_VAR, 0))
         except ValueError:
@@ -47,7 +49,7 @@ class ReportList(object):
         if self._fields is None:
             if isinstance(results, QuerySet):
                 self._fields = [field.name for field in results.query.get_meta().fields]
-            elif DataFrame is not None and isinstance(results, DataFrame) and not results.empty:
+            elif pnd and isinstance(results, DataFrame) and not results.empty:
                 self._fields = [name for name in results.index.names if name is not None] + list(results.columns)
             elif isinstance(results, (list, tuple)) and results:
                 self._fields = results[0].keys()
@@ -174,13 +176,18 @@ class ReportList(object):
             try:
                 attr_field = getattr(self.report_view, field_name)
             except AttributeError:
-                yield record.get(field_name)
+                # The field is a record element
+                ret = record.get(field_name)
+                formatting_func = self.formatting.get(field_name)
+                if formatting_func is not None:
+                    ret = formatting_func(ret)
             else:
+                # The view class has an attribute with this field_name
                 if callable(attr_field):
                     ret = attr_field(record)
                     if getattr(attr_field, 'allow_tags', False):
                         ret = mark_safe(ret)
-                    yield ret
+            yield ret
 
     @property
     def results(self):
@@ -190,7 +197,7 @@ class ReportList(object):
     def get_result_count(self, results):
         if isinstance(results, QuerySet):
             count = results.count()
-        elif DataFrame is not None and isinstance(results, DataFrame):
+        elif pnd and isinstance(results, DataFrame):
             count = results.index.size
         else:
             count = len(results)
@@ -206,7 +213,7 @@ class ReportList(object):
                 field_name = self.fields[i][0]
                 sort_params.append('%s%s' % (sort, field_name))
             ret = results.order_by(*sort_params)
-        elif DataFrame is not None and isinstance(results, DataFrame):
+        elif pnd and isinstance(results, DataFrame):
             sort_params = {'columns': None, 'ascending': True}
             columns = []
             ascending = []
@@ -247,7 +254,7 @@ class ReportList(object):
         records = self.sort_results(results)
         if isinstance(records, QuerySet):
             records = records.values(*[field for field, _ in self.fields])
-        elif DataFrame is not None and isinstance(records, DataFrame):
+        elif pnd and isinstance(records, DataFrame):
             records = records.to_dict(outtype='records')
         records = self.paginate(records)
         return records
@@ -262,6 +269,7 @@ class ReportView(TemplateView, FormMixin):
     paginator = Paginator # ReportPaginator
     list_per_page = 100
     list_max_show_all = 200
+    formatting = None
 
     @admin_view_m
     def dispatch(self, request, *args, **kwargs):
@@ -345,6 +353,11 @@ class ReportView(TemplateView, FormMixin):
 
     def get_list_max_show_all(self):
         return self.list_max_show_all
+
+    def get_formatting(self):
+        if self.formatting is not None:
+            return self.formatting
+        return {}
 
     def aggregate(self, **kwargs):
         ''' Implement here your data elaboration.
