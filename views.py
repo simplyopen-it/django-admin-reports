@@ -1,4 +1,5 @@
 import re
+import csv
 from collections import OrderedDict
 from django import forms
 from django.conf import settings
@@ -6,24 +7,29 @@ from django.db.models import QuerySet
 from django.core.paginator import Paginator, InvalidPage
 from django.views.generic.edit import FormMixin
 from django.views.generic import TemplateView
-from django.contrib.admin.templatetags.admin_static import static
-from django.contrib.admin.options import IncorrectLookupParameters
-from django.contrib.admin import site
+from django.http import HttpResponse
+from django.template.context import RequestContext
 from django.utils.safestring import mark_safe
 from django.utils.decorators import method_decorator
 from django.utils.http import urlencode
 from django.utils.html import format_html
+from django.shortcuts import render_to_response
+from django.contrib.admin.templatetags.admin_static import static
+from django.contrib.admin.options import IncorrectLookupParameters
+from django.contrib.admin import site
 try:
     pnd = True
     from pandas import DataFrame
 except ImportError:
     pnd = False
+from simplyopen.admin_reports.forms import ExportForm
 
 admin_view_m = method_decorator(site.admin_view)
 ALL_VAR = 'all'
 ORDER_VAR = 'o'
 PAGE_VAR = 'p'
-CONTROL_VARS = [ALL_VAR, ORDER_VAR, PAGE_VAR]
+EXPORT_VAR = 'e'
+CONTROL_VARS = [ALL_VAR, ORDER_VAR, PAGE_VAR, EXPORT_VAR]
 camel_re = re.compile('([a-z0-9])([A-Z])')
 
 
@@ -31,6 +37,7 @@ class ReportList(object):
 
     def __init__(self, report_view, results):
         self.report_view = report_view
+        self._results = results
         self.request = self.report_view.request
         self.params = dict(self.request.GET.items())
         self.list_per_page = self.report_view.get_list_per_page()
@@ -64,7 +71,7 @@ class ReportList(object):
         self.ordering_field_columns = self._get_ordering_field_columns()
         self.num_sorted_fields = len(self.ordering_field_columns)
         self.full_result_count = self.get_result_count(results)
-        self._results = self.get_results(results)
+        # self._results = self.get_results(results)
 
     def get_query_string(self, new_params=None, remove=None):
         if new_params is None:
@@ -191,7 +198,7 @@ class ReportList(object):
 
     @property
     def results(self):
-        for record in iter(self._results):
+        for record in self.get_results():
             yield self._items(record)
 
     def get_result_count(self, results):
@@ -250,14 +257,23 @@ class ReportList(object):
                 raise IncorrectLookupParameters
         return records
 
-    def get_results(self, results):
-        records = self.sort_results(results)
+    def get_results(self, paginate=True):
+        records = self.sort_results(self._results)
         if isinstance(records, QuerySet):
             records = records.values(*[field for field, _ in self.fields])
         elif pnd and isinstance(records, DataFrame):
             records = records.to_dict(outtype='records')
-        records = self.paginate(records)
+        if paginate:
+            records = self.paginate(records)
         return records
+
+    def export(self, file_, header=False, **kwargs):
+        writer = csv.writer(file_, **kwargs)
+        records = self.get_results(paginate=False)
+        if header:
+            writer.writerow([name for name, _ in self.fields])
+        for record in records:
+            writer.writerow([item for item in self._items(record)])
 
 
 class ReportView(TemplateView, FormMixin):
@@ -270,6 +286,7 @@ class ReportView(TemplateView, FormMixin):
     list_per_page = 100
     list_max_show_all = 200
     formatting = None
+    export_form_class = ExportForm
 
     @admin_view_m
     def dispatch(self, request, *args, **kwargs):
@@ -287,9 +304,36 @@ class ReportView(TemplateView, FormMixin):
         ]
         return forms.Media(js=[static('admin/js/%s' % url) for url in js])
 
+    def _export(self, form=None):
+        if form is None:
+            form = self.get_export_form()
+        ctx = {
+            'form': form,
+            'back': '?%s' % '&'.join(['%s=%s' % param for param in self.request.GET.items()
+                                      if param[0] != EXPORT_VAR]),
+        }
+        return render_to_response('admin/export.html', RequestContext(self.request, ctx))
+
+    def post(self, *args, **kwargs):
+        form = self.get_export_form(data=self.request.POST)
+        if form.is_valid():
+            context = self.get_context_data(**kwargs)
+            rl = context.get('rl')
+            filename = context['title'].lower().replace(' ', '_')
+            response =  HttpResponse(content_type='text/csv')
+            response['Content-Disposition'] = 'attachment;filename="%s.csv"' % filename
+            rl.export(response, header=form.cleaned_data.get('header'))
+            return response
+        return self._export(form=form)
+
+    def get(self, request, *args, **kwargs):
+        if EXPORT_VAR in request.GET:
+            return self._export()
+        return super(ReportView, self).get(request, *args, **kwargs)
+
     def get_form_kwargs(self):
         kwargs = super(ReportView, self).get_form_kwargs()
-        if self.request.method == 'GET':
+        if self.request.method in ('GET', 'POST'):
             form_data = dict([(key, val) for key, val in self.request.GET.iteritems()
                               if key not in CONTROL_VARS])
             if form_data:
@@ -315,6 +359,7 @@ class ReportView(TemplateView, FormMixin):
             'has_filters': self.get_form_class() is not None,
             'help_text': self.get_help_text(),
             'description': self.get_description(),
+            'EXPORT_VAR': EXPORT_VAR,
         })
         form = self.get_form(self.get_form_class())
         if form is not None:
@@ -358,6 +403,14 @@ class ReportView(TemplateView, FormMixin):
         if self.formatting is not None:
             return self.formatting
         return {}
+
+    def get_export_form_class(self):
+        return self.export_form_class
+
+    def get_export_form(self, form_class=None, **kwargs):
+        if form_class is None:
+            form_class = self.get_export_form_class()
+        return form_class(**kwargs)
 
     def aggregate(self, **kwargs):
         ''' Implement here your data elaboration.
