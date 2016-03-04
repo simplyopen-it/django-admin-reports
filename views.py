@@ -71,7 +71,6 @@ class ReportList(object):
         self.ordering_field_columns = self._get_ordering_field_columns()
         self.num_sorted_fields = len(self.ordering_field_columns)
         self.full_result_count = self.get_result_count(results)
-        # self._results = self.get_results(results)
 
     def get_query_string(self, new_params=None, remove=None):
         if new_params is None:
@@ -354,12 +353,13 @@ class ReportView(TemplateView, FormMixin):
     def get_context_data(self, **kwargs):
         kwargs = super(ReportView, self).get_context_data(**kwargs)
         kwargs['media'] = self.media
+        export_path = '?%s' % '&'.join(['%s=%s' % item for item in self.request.GET.iteritems()] + [EXPORT_VAR])
         kwargs.update({
             'title': self.get_title(),
             'has_filters': self.get_form_class() is not None,
             'help_text': self.get_help_text(),
             'description': self.get_description(),
-            'EXPORT_VAR': EXPORT_VAR,
+            'export_path': export_path,
         })
         form = self.get_form(self.get_form_class())
         if form is not None:

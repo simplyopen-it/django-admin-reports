@@ -57,21 +57,13 @@
                     </span>
                   {% endspaceless %}
                   <input type="submit" value="{% trans 'Search' %}" class="btn btn-info"/>
-                  <input type="submit" value="{% trans 'Export' %}" name="{{ EXPORT_VAR }}" class="btn"/>
                   <span class="small quiet result-count">
+                    <a href="{{ export_path }}" class="btn">{% trans 'Export' %}</a>
                     {{ rl.full_result_count }} {% trans 'results' %}
                     <a href="?">{% trans 'Clear query' %}</a>
                   </span>
                 </div>
               </form>
-
-              {% comment %}
-                <form id="export-report" action="{{ request.get_full_path }}" method="post" class="form-inline">
-                  {% csrf_token %}
-                  <input type="submit" value="{% trans 'Export' %}" name="export" class="btn"/>
-                </form>
-              {% endcomment %}
-
             </div>
           {% endif %}
         {% endblock %}
