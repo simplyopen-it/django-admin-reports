@@ -37,7 +37,7 @@ class ReportList(object):
 
     def __init__(self, report_view, results):
         self.report_view = report_view
-        self._results = results
+        self._split_totals(results)
         self.request = self.report_view.request
         self.params = dict(self.request.GET.items())
         self.list_per_page = self.report_view.get_list_per_page()
@@ -186,7 +186,10 @@ class ReportList(object):
                 ret = record.get(field_name)
                 formatting_func = self.formatting.get(field_name)
                 if formatting_func is not None:
-                    ret = formatting_func(ret)
+                    try:
+                        ret = formatting_func(ret)
+                    except TypeError:
+                        pass
             else:
                 # The view class has an attribute with this field_name
                 if callable(attr_field):
@@ -196,9 +199,25 @@ class ReportList(object):
             yield ret
 
     @property
+    def totals(self):
+        return self._items(self._totals)
+
+    @property
     def results(self):
         for record in self.get_results():
             yield self._items(record)
+
+    def _split_totals(self, results):
+        if self.report_view.with_totals() and (len(results) > 0):
+            if pnd and isinstance(results, DataFrame):
+                self._results = results.iloc[:-1]
+                self._totals = results.iloc[-1]
+            else:
+                self._results = results[:-1]
+                self._totals = results[-1]
+        else:
+            self._results = results
+            self._totals = {}
 
     def get_result_count(self, results):
         if isinstance(results, QuerySet):
@@ -286,6 +305,7 @@ class ReportView(TemplateView, FormMixin):
     list_max_show_all = 200
     formatting = None
     export_form_class = ExportForm
+    totals = False
 
     @admin_view_m
     def dispatch(self, request, *args, **kwargs):
@@ -360,6 +380,7 @@ class ReportView(TemplateView, FormMixin):
             'help_text': self.get_help_text(),
             'description': self.get_description(),
             'export_path': export_path,
+            'totals': self.with_totals(),
         })
         form = self.get_form(self.get_form_class())
         if form is not None:
@@ -375,6 +396,9 @@ class ReportView(TemplateView, FormMixin):
             'rl': ReportList(self, results),
         })
         return kwargs
+
+    def with_totals(self):
+        return self.totals
 
     def get_title(self):
         if not self.title:

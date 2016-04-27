@@ -70,6 +70,30 @@
       </div>
 
       <div class="results">
+
+        {% block totals %}
+          {% if totals %}
+            {% if totals %}
+              <table id="result_list" class="table table-striped table-bordered table-hover table-condensed">
+                <thead>
+                  <tr>
+                    {% for header in rl.headers %}
+                      <th scope="col" {{ header.class_attrib }}>{{ header.label|capfirst }}</th>
+                    {% endfor %}
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    {% for total in rl.totals %}
+                      <td>{{ total }}</td>
+                    {% endfor %}
+                  </tr>
+                </tbody>
+              </table>
+            {% endif %}
+          {% endif %}
+        {% endblock %}
+
         {% block result %}
           <table id="result_list" class="table table-striped table-bordered table-hover table-condensed">
             <thead>
@@ -103,7 +127,6 @@
               {% endfor %}
             </tbody>
           </table>
-
         {% endblock %}
       </div>
 
