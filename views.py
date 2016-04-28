@@ -306,6 +306,7 @@ class ReportView(TemplateView, FormMixin):
     formatting = None
     export_form_class = ExportForm
     totals = False
+    totals_on_top = False
 
     @admin_view_m
     def dispatch(self, request, *args, **kwargs):
@@ -381,6 +382,7 @@ class ReportView(TemplateView, FormMixin):
             'description': self.get_description(),
             'export_path': export_path,
             'totals': self.with_totals(),
+            'totals_on_top': self.totals_on_top,
         })
         form = self.get_form(self.get_form_class())
         if form is not None:

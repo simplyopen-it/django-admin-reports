@@ -1,0 +1,9 @@
+{% block totals %}
+  <tbody>
+    <tr>
+      {% for total in rl.totals %}
+        <td style="font-weight:bold; background:#d1ddc5;">{{ total }}</td>
+      {% endfor %}
+    </tr>
+  </tbody>
+{% endblock %}
