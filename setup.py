@@ -20,5 +20,6 @@ setup(
     ],
     packages=find_packages(),
     package_dir={'admin_reports': 'admin_reports'},
+    include_package_data=True,
     install_requires=['Django>=1.7'],
 )
