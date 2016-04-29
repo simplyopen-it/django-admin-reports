@@ -1,7 +1,5 @@
 import csv
 from django import forms
-from django.utils import formats
-from django.forms.widgets import SelectMultiple
 
 delimiters = ",;|:"
 quotes = "'\"`"

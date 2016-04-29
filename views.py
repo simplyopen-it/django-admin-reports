@@ -22,7 +22,7 @@ try:
     from pandas import DataFrame
 except ImportError:
     pnd = False
-from simplyopen.admin_reports.forms import ExportForm
+from .forms import ExportForm
 
 admin_view_m = method_decorator(site.admin_view)
 ALL_VAR = 'all'
