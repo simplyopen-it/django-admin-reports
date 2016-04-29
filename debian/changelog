@@ -1,0 +1,31 @@
+django-admin-reports (0.8.1~1.gbp738747) UNRELEASED; urgency=medium
+
+  ** SNAPSHOT build @7387470288ded74959615d5a4fd5ec17176bbb79 **
+
+  * admin_report
+  * use dict_filter to save some iterations on the reports result
+  * ReportView handle function fields
+  * ReportView: field's labels
+  * ReportView: fix QuerySet case
+  * ReportView: correct media
+  * ReportView: behave correctly without a form.
+  * ReportView: title and help text
+  * ReportView: pagination and styling
+  * ReportView: sorting
+  * ReportView: fix automatic fileds
+  * ReportView: fix behavior on empty results
+  * ReportView: better aggregate() parameters
+  * ReportView: handle allow_tags method
+  * ReportView: correct get_list_max_show_all
+  * admin_reports: formatting functions
+  * admin_report: csv export
+  * admin_reports: small fixes
+  * add totals to reports
+  * improve admin_report's totals row and allow to specify total's row placement
+  * cleanup
+  * mv in subfolder
+  * add setup.py
+  * add .gitignore
+  * add package_data in setuppy
+
+ -- Marco Pattaro <marco.pattaro@simplyopen.org>  Fri, 29 Apr 2016 14:28:03 +0200
