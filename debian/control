@@ -1,7 +1,7 @@
 Source: django-admin-reports
 Section: python
 Priority: extra
-Build-Depends: debhelper(>= 9), python-setuptools, python (>= 2.6.6-3~)
+Build-Depends: debhelper(>= 9), python-setuptools, python (>= 2.6.6-3~), dh-python
 Maintainer: SimplyOpen <info@simplyopen.org>
 Standards-Version: 3.9.4
 X-Python-Version: >= 2.6
