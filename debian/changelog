@@ -1,6 +1,4 @@
-django-admin-reports (0.8.1~1.gbp738747) UNRELEASED; urgency=medium
-
-  ** SNAPSHOT build @7387470288ded74959615d5a4fd5ec17176bbb79 **
+django-admin-reports (0.9.0) unstable; urgency=medium
 
   * admin_report
   * use dict_filter to save some iterations on the reports result
@@ -27,5 +25,8 @@ django-admin-reports (0.8.1~1.gbp738747) UNRELEASED; urgency=medium
   * add setup.py
   * add .gitignore
   * add package_data in setuppy
+  * add debian folder
+  * Add AUTHORS,LICENSE and README
+  * add dh-python to Build-Depends
 
- -- Marco Pattaro <marco.pattaro@simplyopen.org>  Fri, 29 Apr 2016 14:28:03 +0200
+ -- Marco Pattaro <marco.pattaro@simplyopen.org>  Wed, 04 May 2016 16:49:17 +0200
