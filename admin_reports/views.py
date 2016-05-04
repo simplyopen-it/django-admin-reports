@@ -383,6 +383,7 @@ class ReportView(TemplateView, FormMixin):
             'export_path': export_path,
             'totals': self.with_totals(),
             'totals_on_top': self.totals_on_top,
+            'suit': 'suit' in settings.INSTALLED_APPS,
         })
         form = self.get_form(self.get_form_class())
         if form is not None:
