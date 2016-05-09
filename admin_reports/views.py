@@ -5,6 +5,7 @@ from django import forms
 from django.conf import settings
 from django.db.models import QuerySet
 from django.core.paginator import Paginator, InvalidPage
+from django.core.exceptions import PermissionDenied
 from django.views.generic.edit import FormMixin
 from django.views.generic import TemplateView
 from django.http import HttpResponse
@@ -335,6 +336,8 @@ class ReportView(TemplateView, FormMixin):
         return render_to_response('admin/export.html', RequestContext(self.request, ctx))
 
     def post(self, *args, **kwargs):
+        if not self.has_permission(self.request.user):
+            raise PermissionDenied()
         form = self.get_export_form(data=self.request.POST)
         if form.is_valid():
             context = self.get_context_data(**kwargs)
@@ -347,6 +350,8 @@ class ReportView(TemplateView, FormMixin):
         return self._export(form=form)
 
     def get(self, request, *args, **kwargs):
+        if not self.has_permission(request.user):
+            raise PermissionDenied()
         if EXPORT_VAR in request.GET:
             return self._export()
         return super(ReportView, self).get(request, *args, **kwargs)
@@ -438,6 +443,12 @@ class ReportView(TemplateView, FormMixin):
         if form_class is None:
             form_class = self.get_export_form_class()
         return form_class(**kwargs)
+
+    def has_permission(self, user):
+        ''' Override this method to set your access rules for the
+        current report.
+        '''
+        return True
 
     def aggregate(self, **kwargs):
         ''' Implement here your data elaboration.
