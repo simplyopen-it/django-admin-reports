@@ -1,3 +1,10 @@
+django-admin-reports (0.9.1) unstable; urgency=medium
+
+  * handle if suit is in INSTALLED_APPS
+  * handle table's columns alignment
+
+ -- Marco Pattaro <marco.pattaro@simplyopen.org>  Wed, 25 May 2016 13:52:40 +0200
+
 django-admin-reports (0.9.0) unstable; urgency=medium
 
   * admin_report
