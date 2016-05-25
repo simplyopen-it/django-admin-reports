@@ -293,7 +293,7 @@ class ReportList(object):
         if header:
             writer.writerow([name for name, _ in self.fields])
         for record in records:
-            writer.writerow([item for item in self._items(record)])
+            writer.writerow([item for _, item in self._items(record)])
 
 
 class ReportView(TemplateView, FormMixin):
