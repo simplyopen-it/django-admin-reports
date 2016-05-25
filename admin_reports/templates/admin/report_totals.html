@@ -1,8 +1,8 @@
 {% block totals %}
   <tbody>
     <tr>
-      {% for total in rl.totals %}
-        <td style="font-weight:bold; background:#d1ddc5;">{{ total }}</td>
+      {% for alignment, total in rl.totals %}
+        <td class="{{ alignment }}"style="font-weight:bold; background:#d1ddc5;">{{ total }}</td>
       {% endfor %}
     </tr>
   </tbody>
