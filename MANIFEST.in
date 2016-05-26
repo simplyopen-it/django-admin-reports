@@ -4,3 +4,4 @@ include AUTHORS.rst
 include MANIFEST.in
 exclude *.pyc
 recursive-include admin_reports/templates *.html
+recursive-include admin_reports/static *

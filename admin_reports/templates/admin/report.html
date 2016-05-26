@@ -12,6 +12,7 @@
     <script type="text/javascript" src="{% url 'admin:jsi18n' %}"></script>
     {{ form.media.css }}
   {% endif %}
+  <link rel="stylesheet" type="text/css" href="{% static "admin_report/css/reportlist.css" %}"/>
   {{ media.css }}
 {% endblock %}
 
@@ -103,8 +104,8 @@
                     <tbody>
                       {% for result in rl.results %}
                         <tr class="{% cycle 'row1' 'row2' %}">
-                          {% for item in result %}
-                            <td >{{ item }}</td>
+                          {% for alignment, item in result %}
+                            <td class="{{ alignment }}">{{ item }}</td>
                           {% endfor %}
                         </tr>
                       {% endfor %}

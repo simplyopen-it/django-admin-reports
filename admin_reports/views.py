@@ -44,6 +44,7 @@ class ReportList(object):
         self.list_per_page = self.report_view.get_list_per_page()
         self.list_max_show_all = self.report_view.get_list_max_show_all()
         self.formatting = self.report_view.get_formatting()
+        self.alignment = self.report_view.get_alignment()
         try:
             self.page_num = int(self.request.GET.get(PAGE_VAR, 0))
         except ValueError:
@@ -189,7 +190,7 @@ class ReportList(object):
                 if formatting_func is not None:
                     try:
                         ret = formatting_func(ret)
-                    except TypeError:
+                    except (TypeError, ValueError):
                         pass
             else:
                 # The view class has an attribute with this field_name
@@ -197,7 +198,8 @@ class ReportList(object):
                     ret = attr_field(record)
                     if getattr(attr_field, 'allow_tags', False):
                         ret = mark_safe(ret)
-            yield ret
+            alignment = self.alignment.get(field_name, 'align-left')
+            yield (alignment, ret)
 
     @property
     def totals(self):
@@ -292,7 +294,7 @@ class ReportList(object):
         if header:
             writer.writerow([name for name, _ in self.fields])
         for record in records:
-            writer.writerow([item for item in self._items(record)])
+            writer.writerow([item for _, item in self._items(record)])
 
 
 class ReportView(TemplateView, FormMixin):
@@ -305,6 +307,7 @@ class ReportView(TemplateView, FormMixin):
     list_per_page = 100
     list_max_show_all = 200
     formatting = None
+    alignment = None
     export_form_class = ExportForm
     totals = False
     totals_on_top = False
@@ -434,6 +437,11 @@ class ReportView(TemplateView, FormMixin):
     def get_formatting(self):
         if self.formatting is not None:
             return self.formatting
+        return {}
+
+    def get_alignment(self):
+        if self.alignment is not None:
+            return self.alignment
         return {}
 
     def get_export_form_class(self):
