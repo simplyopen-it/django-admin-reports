@@ -1,3 +1,10 @@
+django-admin-reports (0.9.3) unstable; urgency=medium
+
+  * check user permissions
+  * fix csv export
+
+ -- Marco Pattaro <marco.pattaro@simplyopen.org>  Tue, 31 May 2016 12:51:31 +0200
+
 django-admin-reports (0.9.2) unstable; urgency=medium
 
   * udpate manifest
