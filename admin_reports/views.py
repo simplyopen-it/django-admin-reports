@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+from __future__ import unicode_literals
+
 import re
 import csv
 from collections import OrderedDict
@@ -292,9 +295,9 @@ class ReportList(object):
         writer = csv.writer(file_, **kwargs)
         records = self.get_results(paginate=False)
         if header:
-            writer.writerow([name for name, _ in self.fields])
+            writer.writerow([name.encode(settings.DEFAULT_CHARSET) for name, _ in self.fields])
         for record in records:
-            writer.writerow([item for _, item in self._items(record)])
+            writer.writerow([item.encode(settings.DEFAULT_CHARSET) for _, item in self._items(record)])
 
 
 class ReportView(TemplateView, FormMixin):
