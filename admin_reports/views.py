@@ -6,7 +6,7 @@ import csv
 from collections import OrderedDict
 from django import forms
 from django.conf import settings
-from django.db.models import QuerySet
+from django.db.models.query import QuerySet, ValuesQuerySet
 from django.core.paginator import Paginator, InvalidPage
 from django.core.exceptions import PermissionDenied
 from django.views.generic.edit import FormMixin
@@ -283,8 +283,8 @@ class ReportList(object):
 
     def get_results(self, paginate=True):
         records = self.sort_results(self._results)
-        if isinstance(records, QuerySet):
-            records = records.values(*[field for field, _ in self.fields])
+        if isinstance(records, QuerySet) and not isinstance(records, ValuesQuerySet):
+            records = records.values(*[field for field, _ in self.fields if not getattr(self.report_view, field, False)])
         elif pnd and isinstance(records, DataFrame):
             records = records.to_dict(outtype='records')
         if paginate:
