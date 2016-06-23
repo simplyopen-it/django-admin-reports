@@ -297,7 +297,8 @@ class ReportList(object):
         if header:
             writer.writerow([name.encode(settings.DEFAULT_CHARSET) for name, _ in self.fields])
         for record in records:
-            writer.writerow([item.encode(settings.DEFAULT_CHARSET) for _, item in self._items(record)])
+            writer.writerow([item.encode(settings.DEFAULT_CHARSET) if isinstance(item, unicode) else item
+                             for _, item in self._items(record)])
 
 
 class ReportView(TemplateView, FormMixin):
@@ -351,7 +352,7 @@ class ReportView(TemplateView, FormMixin):
             filename = context['title'].lower().replace(' ', '_')
             response =  HttpResponse(content_type='text/csv')
             response['Content-Disposition'] = 'attachment;filename="%s.csv"' % filename
-            rl.export(response, header=form.cleaned_data.get('header'))
+            rl.export(response, **form.cleaned_data)
             return response
         return self._export(form=form)
 

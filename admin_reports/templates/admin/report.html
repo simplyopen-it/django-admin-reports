@@ -56,7 +56,7 @@
           <div {% if suit %}id="toolbar" class="clearfix"{% else %} id="changelist" class="module filtered"{% endif %}>
             <form id="report-search" action="" method="get" class="form-inline">
               {% if has_filters %}
-                <div {% if suit %}class="search-container"{% endif %}>
+                <div>
                   {% spaceless %}
                     <span class="search-filters">
                       {{ form }}
