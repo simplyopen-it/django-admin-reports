@@ -40,3 +40,5 @@ class ExportForm(forms.Form):
         escapechar = self.cleaned_data.get('escapechar')
         if escapechar:
             return str(escapechar)
+        else:
+            return ''

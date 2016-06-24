@@ -1,19 +1,15 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-import re
-import csv
 from collections import OrderedDict
 from django import forms
 from django.conf import settings
-from django.db.models.query import QuerySet, ValuesQuerySet
-from django.core.paginator import Paginator, InvalidPage
+from django.core.paginator import InvalidPage
 from django.core.exceptions import PermissionDenied
 from django.views.generic.edit import FormMixin
 from django.views.generic import TemplateView
 from django.http import HttpResponse
 from django.template.context import RequestContext
-from django.utils.safestring import mark_safe
 from django.utils.decorators import method_decorator
 from django.utils.http import urlencode
 from django.utils.html import format_html
@@ -21,12 +17,6 @@ from django.shortcuts import render_to_response
 from django.contrib.admin.templatetags.admin_static import static
 from django.contrib.admin.options import IncorrectLookupParameters
 from django.contrib.admin import site
-try:
-    pnd = True
-    from pandas import DataFrame
-except ImportError:
-    pnd = False
-from .forms import ExportForm
 
 admin_view_m = method_decorator(site.admin_view)
 ALL_VAR = 'all'
@@ -34,48 +24,24 @@ ORDER_VAR = 'o'
 PAGE_VAR = 'p'
 EXPORT_VAR = 'e'
 CONTROL_VARS = [ALL_VAR, ORDER_VAR, PAGE_VAR, EXPORT_VAR]
-camel_re = re.compile('([a-z0-9])([A-Z])')
 
 
 class ReportList(object):
 
-    def __init__(self, report_view, results):
-        self.report_view = report_view
-        self._split_totals(results)
-        self.request = self.report_view.request
+    def __init__(self, request, report):
+        self.request = request
+        self.report = report
         self.params = dict(self.request.GET.items())
-        self.list_per_page = self.report_view.get_list_per_page()
-        self.list_max_show_all = self.report_view.get_list_max_show_all()
-        self.formatting = self.report_view.get_formatting()
-        self.alignment = self.report_view.get_alignment()
+        self.ordering_field_columns = self._get_ordering_field_columns()
+        self.report.set_sort_params(*self._get_ordering())
+        self.multi_page = False
+        self.can_show_all = True
+        self.paginator = self.report.get_paginator()
         try:
             self.page_num = int(self.request.GET.get(PAGE_VAR, 0))
         except ValueError:
             self.page_num = 0
         self.show_all = ALL_VAR in self.request.GET
-        self.paginator = None
-        self.multi_page = False
-        self.can_show_all = True
-        self._fields = self.report_view.get_fields()
-        # Guess fields if not defined
-        if self._fields is None:
-            if isinstance(results, QuerySet):
-                self._fields = [field.name for field in results.query.get_meta().fields]
-            elif pnd and isinstance(results, DataFrame) and not results.empty:
-                self._fields = [name for name in results.index.names if name is not None] + list(results.columns)
-            elif isinstance(results, (list, tuple)) and results:
-                self._fields = results[0].keys()
-            else:
-                self._fields = []
-        self.fields = []
-        for field in self._fields:
-            if isinstance(field, (list, tuple)):
-                self.fields.append(field)
-            else:
-                self.fields.append((field, ' '.join([s.title() for s in field.split('_')])))
-        self.ordering_field_columns = self._get_ordering_field_columns()
-        self.num_sorted_fields = len(self.ordering_field_columns)
-        self.full_result_count = self.get_result_count(results)
 
     def get_query_string(self, new_params=None, remove=None):
         if new_params is None:
@@ -94,6 +60,19 @@ class ReportList(object):
             else:
                 p[k] = v
         return '?%s' % urlencode(sorted(p.items()))
+
+    def _get_ordering(self):
+        ordering = []
+        if ORDER_VAR in self.params:
+            sort_values = self.params.get(ORDER_VAR).split('.')
+            fields = self.report.get_fields()
+            for o in sort_values:
+                if o.startswith('-'):
+                    field = '-%s' % fields[int(o.replace('-', ''))][0]
+                else:
+                    field = fields[int(o)][0]
+                ordering.append(field)
+        return ordering
 
     def _get_ordering_field_columns(self):
         """
@@ -128,10 +107,11 @@ class ReportList(object):
         return ordering_fields
 
     def headers(self):
-        for i, field in enumerate(self.fields):
+        fields = self.report.get_fields()
+        for i, field in enumerate(fields):
             name = field[0]
             label = field[1]
-            if callable(getattr(self.report_view, name, name)):
+            if callable(getattr(self.report, name, name)):
                 yield {
                     'label': label,
                     'class_attrib': format_html(' class="column-{0}"', name),
@@ -182,98 +162,27 @@ class ReportList(object):
                 "class_attrib": format_html(' class="{0}"', ' '.join(th_classes)) if th_classes else '',
             }
 
-    def _items(self, record):
-        for field_name, _ in self.fields:
-            try:
-                attr_field = getattr(self.report_view, field_name)
-            except AttributeError:
-                # The field is a record element
-                ret = record.get(field_name)
-                formatting_func = self.formatting.get(field_name)
-                if formatting_func is not None:
-                    try:
-                        ret = formatting_func(ret)
-                    except (TypeError, ValueError):
-                        pass
-            else:
-                # The view class has an attribute with this field_name
-                if callable(attr_field):
-                    ret = attr_field(record)
-                    if getattr(attr_field, 'allow_tags', False):
-                        ret = mark_safe(ret)
-            alignment = self.alignment.get(field_name, 'align-left')
-            yield (alignment, ret)
-
     @property
     def totals(self):
-        return self._items(self._totals)
+        fields = self.report.get_fields()
+        for idx, value in enumerate(self.report.iter_totals()):
+            yield (self.report.get_alignment(fields[idx][0]), value)
 
     @property
     def results(self):
-        for record in self.get_results():
-            yield self._items(record)
+        fields = self.report.get_fields()
+        for record in self.paginate():
+            yield [(self.report.get_alignment(fields[idx][0]), value) for idx, value in enumerate(record)]
 
-    def _split_totals(self, results):
-        if self.report_view.with_totals() and (len(results) > 0):
-            if pnd and isinstance(results, DataFrame):
-                self._results = results.iloc[:-1]
-                self._totals = results.iloc[-1]
-            else:
-                self._results = results[:-1]
-                self._totals = results[-1]
-        else:
-            self._results = results
-            self._totals = {}
+    def get_result_count(self):
+        return len(self.report)
 
-    def get_result_count(self, results):
-        if isinstance(results, QuerySet):
-            count = results.count()
-        elif pnd and isinstance(results, DataFrame):
-            count = results.index.size
-        else:
-            count = len(results)
-        return count
-
-    def sort_results(self, results):
-        if isinstance(results, QuerySet):
-            sort_params = []
-            for i in self.ordering_field_columns:
-                sort = ''
-                if self.ordering_field_columns.get(i).lower() == 'desc':
-                    sort = '-'
-                field_name = self.fields[i][0]
-                sort_params.append('%s%s' % (sort, field_name))
-            ret = results.order_by(*sort_params)
-        elif pnd and isinstance(results, DataFrame):
-            sort_params = {'columns': None, 'ascending': True}
-            columns = []
-            ascending = []
-            for i in self.ordering_field_columns:
-                asc = True
-                if self.ordering_field_columns.get(i).lower() == 'desc':
-                    asc = False
-                columns.append(self.fields[i][0])
-                ascending.append(asc)
-            if columns:
-                sort_params['columns'] = columns
-            if ascending:
-                sort_params['ascending'] = ascending
-            ret = results.reset_index().sort(**sort_params)
-        else:
-            ret = results
-            for i in reversed(self.ordering_field_columns):
-                reverse = False
-                if self.ordering_field_columns.get(i).lower() == 'desc':
-                    reverse = True
-                ret = sorted(ret, key=lambda x: x[self.fields[i][0]], reverse=reverse)
-        return ret
-
-    def paginate(self, records):
-        # paginate
-        self.paginator = self.report_view.get_paginator(records)
+    def paginate(self):
+        records = self.report.results
+        self.paginator = self.report.get_paginator()
         result_count = self.paginator.count
-        self.multi_page = result_count > self.list_per_page
-        self.can_show_all = result_count <= self.list_max_show_all
+        self.multi_page = result_count > self.report.get_list_per_page()
+        self.can_show_all = result_count <= self.report.get_list_max_show_all()
         if not (self.show_all and self.can_show_all) and self.multi_page:
             try:
                 records = self.paginator.page(self.page_num + 1).object_list
@@ -281,44 +190,24 @@ class ReportList(object):
                 raise IncorrectLookupParameters
         return records
 
-    def get_results(self, paginate=True):
-        records = self.sort_results(self._results)
-        if isinstance(records, QuerySet) and not isinstance(records, ValuesQuerySet):
-            records = records.values(*[field for field, _ in self.fields if not getattr(self.report_view, field, False)])
-        elif pnd and isinstance(records, DataFrame):
-            records = records.to_dict(outtype='records')
-        if paginate:
-            records = self.paginate(records)
-        return records
-
-    def export(self, file_, header=False, **kwargs):
-        writer = csv.writer(file_, **kwargs)
-        records = self.get_results(paginate=False)
-        if header:
-            writer.writerow([name.encode(settings.DEFAULT_CHARSET) for name, _ in self.fields])
-        for record in records:
-            writer.writerow([item.encode(settings.DEFAULT_CHARSET) if isinstance(item, unicode) else item
-                             for _, item in self._items(record)])
-
 
 class ReportView(TemplateView, FormMixin):
-    template_name = 'admin/report.html'
-    title = ''
-    description = ''
-    help_text = ''
-    fields = None
-    paginator = Paginator # ReportPaginator
-    list_per_page = 100
-    list_max_show_all = 200
-    formatting = None
-    alignment = None
-    export_form_class = ExportForm
-    totals = False
-    totals_on_top = False
+
+    report_class = None
 
     @admin_view_m
     def dispatch(self, request, *args, **kwargs):
         return super(ReportView, self).dispatch(request, *args, **kwargs)
+
+    def __init__(self, report_class, *args, **kwargs):
+        super(ReportView, self).__init__(*args, **kwargs)
+        self.report_class = report_class
+        self.report = None
+
+    def get_initial(self):
+        initial = super(ReportView, self).get_initial()
+        initial.update(self.report.get_initial())
+        return initial
 
     @property
     def media(self):
@@ -343,21 +232,23 @@ class ReportView(TemplateView, FormMixin):
         return render_to_response('admin/export.html', RequestContext(self.request, ctx))
 
     def post(self, *args, **kwargs):
-        if not self.has_permission(self.request.user):
+        self.report = self.report_class()
+        if not self.report.has_permission(self.request.user):
             raise PermissionDenied()
         form = self.get_export_form(data=self.request.POST)
         if form.is_valid():
             context = self.get_context_data(**kwargs)
-            rl = context.get('rl')
+            # rl = context.get('rl')
             filename = context['title'].lower().replace(' ', '_')
             response =  HttpResponse(content_type='text/csv')
             response['Content-Disposition'] = 'attachment;filename="%s.csv"' % filename
-            rl.export(response, **form.cleaned_data)
+            self.report.to_csv(response, **form.cleaned_data)
             return response
         return self._export(form=form)
 
     def get(self, request, *args, **kwargs):
-        if not self.has_permission(request.user):
+        self.report = self.report_class()
+        if not self.report.has_permission(request.user):
             raise PermissionDenied()
         if EXPORT_VAR in request.GET:
             return self._export()
@@ -383,87 +274,42 @@ class ReportView(TemplateView, FormMixin):
             return None
         return super(ReportView, self).get_form(form_class)
 
+    def get_form_class(self):
+        return self.report_class.form_class
+
     def get_context_data(self, **kwargs):
         kwargs = super(ReportView, self).get_context_data(**kwargs)
         kwargs['media'] = self.media
         export_path = '?%s' % '&'.join(['%s=%s' % item for item in self.request.GET.iteritems()] + [EXPORT_VAR])
-        kwargs.update({
-            'title': self.get_title(),
-            'has_filters': self.get_form_class() is not None,
-            'help_text': self.get_help_text(),
-            'description': self.get_description(),
-            'export_path': export_path,
-            'totals': self.with_totals(),
-            'totals_on_top': self.totals_on_top,
-            'suit': 'suit' in settings.INSTALLED_APPS,
-        })
         form = self.get_form(self.get_form_class())
         if form is not None:
             if 'form' not in kwargs:
                 kwargs['form'] = form
             if form.is_valid():
-                results = self.aggregate(**form.cleaned_data)
-            else:
-                results = []
-        else:
-            results = self.aggregate()
+                self.report.set_params(**form.cleaned_data)
         kwargs.update({
-            'rl': ReportList(self, results),
+            'rl': ReportList(self.request, self.report),
+            'title': self.report.get_title(),
+            'has_filters': self.get_form_class() is not None,
+            'help_text': self.report.get_help_text(),
+            'description': self.report.get_description(),
+            'export_path': export_path,
+            'totals': self.report.get_has_totals(),
+            'totals_on_top': self.report.totals_on_top,
+            'suit': 'suit' in settings.INSTALLED_APPS,
         })
         return kwargs
 
-    def with_totals(self):
-        return self.totals
-
-    def get_title(self):
-        if not self.title:
-            return camel_re.sub(r'\1 \2', self.__class__.__name__).capitalize()
-        return self.title
-
-    def get_fields(self):
-        return self.fields
-
-    def get_help_text(self):
-        return mark_safe(self.help_text)
-
-    def get_description(self):
-        return mark_safe(self.description)
-
-    def get_paginator(self, results):
-        return self.paginator(results, self.get_list_per_page())
-
-    def get_list_per_page(self):
-        return self.list_per_page
-
-    def get_list_max_show_all(self):
-        return self.list_max_show_all
-
-    def get_formatting(self):
-        if self.formatting is not None:
-            return self.formatting
-        return {}
-
-    def get_alignment(self):
-        if self.alignment is not None:
-            return self.alignment
-        return {}
-
-    def get_export_form_class(self):
-        return self.export_form_class
+    def get_template_names(self):
+        return self.report.template_name
 
     def get_export_form(self, form_class=None, **kwargs):
         if form_class is None:
-            form_class = self.get_export_form_class()
+            form_class = self.report.get_export_form_class()
         return form_class(**kwargs)
 
-    def has_permission(self, user):
-        ''' Override this method to set your access rules for the
-        current report.
-        '''
-        return True
-
-    def aggregate(self, **kwargs):
-        ''' Implement here your data elaboration.
-        Must return a list of dict.
-        '''
-        raise NotImplementedError('Subclasses must implement this method')
+    # def has_permission(self, request):
+    #     ''' Override this method to set your access rules for the
+    #     current report.
+    #     '''
+    #     return True
