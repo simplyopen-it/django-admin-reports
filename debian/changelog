@@ -1,3 +1,10 @@
+django-admin-reports (0.10.0) unstable; urgency=medium
+
+  * move much of the report logic in Report class, while the ReportView and ReportList should be responsible only of the web communication and rendering
+  * to_csv extra_rows
+
+ -- Marco Pattaro <marco.pattaro@simplyopen.org>  Thu, 30 Jun 2016 18:06:52 +0200
+
 django-admin-reports (0.9.4) unstable; urgency=medium
 
   * correct charset encoding when exporting to csv
