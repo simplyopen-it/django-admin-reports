@@ -9,7 +9,8 @@ escapechars = " \\"
 class ExportForm(forms.Form):
     ''' Let an admin user costomize a CSV export.
     '''
-    header = forms.BooleanField(required=False)
+    header = forms.BooleanField(required=False, initial=True)
+    totals = forms.BooleanField(required=False, initial=True)
     delimiter = forms.ChoiceField(choices=zip(delimiters, delimiters))
     quotechar = forms.ChoiceField(choices=zip(quotes, quotes))
     quoting = forms.ChoiceField(
@@ -20,6 +21,7 @@ class ExportForm(forms.Form):
             (csv.QUOTE_ALL, 'All'),
         ))
     escapechar = forms.ChoiceField(choices=(('', ''), ('\\', '\\')), required=False)
+
 
     def clean_quoting(self):
         quoting = self.cleaned_data.get('quoting')

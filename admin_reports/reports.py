@@ -242,15 +242,21 @@ class Report(object):
         '''
         raise NotImplementedError('Subclasses must implement this method')
 
-    def to_csv(self, fileobj, header=False, delimiter=';', quotechar='"', quoting=csv.QUOTE_NONNUMERIC, escapechar='', **kwargs):
+    def to_csv(self, fileobj, header=False, totals=False, delimiter=';',
+               quotechar='"', quoting=csv.QUOTE_NONNUMERIC,
+               escapechar='', extra_rows=None, **kwargs):
         writer = csv.writer(fileobj, delimiter=str(delimiter),
                             quotechar=str(quotechar), quoting=quoting,
                             escapechar=str(escapechar), **kwargs)
+        if extra_rows is not None:
+            writer.writerows(extra_rows)
         if header:
             writer.writerow([name.encode(settings.DEFAULT_CHARSET) for name, _ in self.get_fields()])
         for record in self.iter_results():
             writer.writerow([elem.encode(settings.DEFAULT_CHARSET) if isinstance(elem, unicode) else elem
                              for elem in record])
+        if totals and self.get_has_totals():
+            writer.writerow(self.totals)
 
     def has_permission(self, user):
         return True

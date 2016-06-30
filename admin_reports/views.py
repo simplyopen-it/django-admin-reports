@@ -238,7 +238,6 @@ class ReportView(TemplateView, FormMixin):
         form = self.get_export_form(data=self.request.POST)
         if form.is_valid():
             context = self.get_context_data(**kwargs)
-            # rl = context.get('rl')
             filename = context['title'].lower().replace(' ', '_')
             response =  HttpResponse(content_type='text/csv')
             response['Content-Disposition'] = 'attachment;filename="%s.csv"' % filename
