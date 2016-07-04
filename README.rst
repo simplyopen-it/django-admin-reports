@@ -1,3 +1,6 @@
+.. image:: https://img.shields.io/pypi/v/admin_reports.svg
+   :target: https://pypi.python.org/pypi/admin_reports
+
 ====================
 django-admin-reports
 ====================
