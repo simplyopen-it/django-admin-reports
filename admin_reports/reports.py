@@ -2,7 +2,7 @@
 from __future__ import unicode_literals
 
 from django.conf import settings
-from django.db.models.query import QuerySet, ValuesQuerySet
+from django.db.models.query import QuerySet
 from django.utils.safestring import mark_safe
 from django.core.paginator import Paginator
 import csv
@@ -29,7 +29,6 @@ class Report(object):
     paginator = Paginator # ReportPaginator
     list_per_page = 100
     list_max_show_all = 200
-    formatting = None
     alignment = None
     form_class = None
     export_form_class = ExportForm
@@ -91,7 +90,7 @@ class Report(object):
 
     def _eval(self):
         results = self.aggregate(**self._params)
-        if isinstance(results, QuerySet) and not isinstance(results, ValuesQuerySet):
+        if isinstance(results, QuerySet):
             self._data_type = 'qs'
         elif pnd and isinstance(results, DataFrame):
             self._data_type = 'df'
@@ -100,7 +99,7 @@ class Report(object):
 
     def _items(self, record):
         for field_name, _ in self.get_fields():
-            # Does the field_name refer to an aggregation colum or is
+            # Does the field_name refer to an aggregation column or is
             # it an attribute of this instance?
             try:
                 attr_field = getattr(self, field_name)
@@ -131,7 +130,7 @@ class Report(object):
         if not self._sorted:
             self._sort_results()
         if self._data_type == 'qs':
-            return self._results.values(*[field for field, _ in self.fields if not getattr(self, field, False)])
+            self._results.values()
         elif self._data_type == 'df':
             return self._results.to_dict(outtype='records')
         return self._results
@@ -150,13 +149,6 @@ class Report(object):
             return self.formatting
         return {}
 
-    def iter_field_keys(self):
-        for field in self.fields:
-            if isinstance(field, (list, tuple)):
-                yield field[0]
-            else:
-                yield field
-
     def get_alignment(self, field):
         if self.alignment is None:
             return 'align-left'
@@ -167,9 +159,20 @@ class Report(object):
                 return 'align-left'
 
     def get_fields(self):
+        if self.fields is not None:
+            fields = self.fields
+        elif self._data_type == 'df':
+            fields = self._results.columns
+        elif self._data_type == 'qs':
+            fields = self._results.values().field_names
+        else:
+            try:
+                fields = self.get_results()[0].keys()
+            except IndexError:
+                fields = []
         return [field if isinstance(field, (list, tuple)) else
                 (field, ' '.join([s.title() for s in field.split('_')]))
-                for field in self.fields]
+                for field in fields]
 
     def set_params(self, **kwargs):
         self._params = kwargs
