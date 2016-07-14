@@ -60,6 +60,30 @@ So for the example above::
 
   /reports/my-report
 
+Passing parameters to ``aggregate``
+===================================
+
+Most of the times you'll need to pass parameters to ``aggregate``, you
+can do so by the association of a Form class to your Report: all the
+form fields will be passed to ``aggregate`` as keyword arguments, then
+it's up to you what do with them.::
+
+  from django import forms
+  from admin_reports.reports import Report
+
+  class MyReportForm(forms.Form):
+      from_date = forms.DateField(label="From")
+      to_date = forms.DateField(label="To")
+
+
+  class MyReport(Report):
+      form_class = MyReportForm
+
+      def aggregate(self, from_date=None, to_date=None, **kwargs):
+          # Write yout aggregation here
+          return ret
+
+
 The Report class
 ****************
 
