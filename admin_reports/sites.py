@@ -47,4 +47,4 @@ class AdminReportSite(object):
         return self.get_urls(), 'admin_reports', self.name
 
 
-report_site = AdminReportSite()
+site = AdminReportSite()

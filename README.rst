@@ -31,8 +31,7 @@ method must return a list of dictionaries, a Queryset or a
 
 A stupid example could be this: ::
 
-  from admin_reports.reports import Report
-  from admin_reports.decorators import register
+  from admin_reports import Report, register
 
   @register
   class MyReport(Report):
@@ -45,20 +44,28 @@ A stupid example could be this: ::
 
 Then in your django site ``urls.py`` add the following: ::
 
-  from admin_reports import report_site
+  from django.contrib import admin
+  import admin_reports
 
   urlpatterns = patterns(
       ...
-      url(r'^reports/', include(report_site.urls)),
+      url(r^admin/', include(admin.site.urls)),
+      url(r'^admin/', include(admin_reports.site.urls)),
       ...
   )
 
-The auto generate urls will be a lowercase, dash separated version of
+The auto generate urls will be a lowercase version of
 your class name.
 
 So for the example above::
 
-  /reports/my-report
+  /admin/myapp/myreport
+
+The urlname to be passed to ``reverse`` will be the underscored
+version of your class name, so with the above example::
+
+  'admin_reports:my_report'
+
 
 Passing parameters to ``aggregate``
 ===================================
@@ -69,7 +76,8 @@ form fields will be passed to ``aggregate`` as keyword arguments, then
 it's up to you what do with them.::
 
   from django import forms
-  from admin_reports.reports import Report
+  from admin_reports import Report
+
 
   class MyReportForm(forms.Form):
       from_date = forms.DateField(label="From")
