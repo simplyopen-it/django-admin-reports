@@ -33,7 +33,7 @@ A stupid example could be this: ::
 
   from admin_reports import Report, register
 
-  @register
+  @register()
   class MyReport(Report):
       def aggregate(self, **kwargs):
           return [
