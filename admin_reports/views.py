@@ -233,7 +233,7 @@ class ReportView(TemplateView, FormMixin):
 
     def post(self, *args, **kwargs):
         self.report = self.report_class()
-        if not self.report.has_permission(self.request.user):
+        if not self.report.has_permission(self.request):
             raise PermissionDenied()
         form = self.get_export_form(data=self.request.POST)
         if form.is_valid():
@@ -247,7 +247,7 @@ class ReportView(TemplateView, FormMixin):
 
     def get(self, request, *args, **kwargs):
         self.report = self.report_class()
-        if not self.report.has_permission(request.user):
+        if not self.report.has_permission(request):
             raise PermissionDenied()
         if EXPORT_VAR in request.GET:
             return self._export()
@@ -306,9 +306,3 @@ class ReportView(TemplateView, FormMixin):
         if form_class is None:
             form_class = self.report.get_export_form_class()
         return form_class(**kwargs)
-
-    # def has_permission(self, request):
-    #     ''' Override this method to set your access rules for the
-    #     current report.
-    #     '''
-    #     return True

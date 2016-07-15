@@ -261,5 +261,5 @@ class Report(object):
         if totals and self.get_has_totals():
             writer.writerow(self.totals)
 
-    def has_permission(self, user):
-        return True
+    def has_permission(self, request):
+        return request.user.is_active and request.user.is_staff
