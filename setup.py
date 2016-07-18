@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 from setuptools import setup, find_packages
-from admin_reports import __version__
+# from admin_reports import __version__
 setup(
     name='admin_reports',
-    version=__version__,
+    version='0.10.1',
     description='Reports for django-admin',
     long_description="Easily define and show data analysis reports for django-admin.",
     author='Simplyopen',

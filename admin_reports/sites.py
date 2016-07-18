@@ -1,4 +1,5 @@
 from django.apps import apps
+from django.conf.urls import url
 from .views import ReportView
 from .reports import Report, camel_re
 
@@ -30,7 +31,6 @@ class AdminReportSite(object):
             self._registry.remove(report)
 
     def get_urls(self):
-        from django.conf.urls import url
         urlpatterns = []
 
         for report in self._registry:
