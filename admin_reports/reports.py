@@ -2,7 +2,7 @@
 from __future__ import unicode_literals
 
 from django.conf import settings
-from django.db.models.query import QuerySet
+from django.db.models.query import QuerySet, ValuesQuerySet
 from django.utils.safestring import mark_safe
 from django.core.paginator import Paginator
 import csv
@@ -130,7 +130,10 @@ class Report(object):
         if not self._sorted:
             self._sort_results()
         if self._data_type == 'qs':
-            return self._results.values()
+            if not isinstance(self._results, ValuesQuerySet):
+                return self._results.values()
+            else:
+                return self._results
         elif self._data_type == 'df':
             return self._results.to_dict(outtype='records')
         return self._results
@@ -164,7 +167,10 @@ class Report(object):
         elif self._data_type == 'df':
             fields = self._results.columns
         elif self._data_type == 'qs':
-            fields = self._results.values().field_names
+            if isinstance(self._results, ValuesQuerySet):
+                fields = self._results.field_names
+            else:
+                fields = self._results.values().field_names
         else:
             try:
                 fields = self.get_results()[0].keys()
