@@ -130,7 +130,7 @@ class Report(object):
         if not self._sorted:
             self._sort_results()
         if self._data_type == 'qs':
-            self._results.values()
+            return self._results.values()
         elif self._data_type == 'df':
             return self._results.to_dict(outtype='records')
         return self._results
