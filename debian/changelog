@@ -1,3 +1,12 @@
+django-admin-reports (0.10.2) unstable; urgency=medium
+
+  * update setup.py to read version from __init__.py
+  * fix Report.get_results() in Queryset Case
+  * Handle different interface between QuerySet and ValuesQuerySet
+  * update report.html template
+
+ -- Marco Pattaro <marco.pattaro@simplyopen.org>  Mon, 25 Jul 2016 10:51:11 +0200
+
 django-admin-reports (0.10.1) unstable; urgency=medium
 
   * update readme
