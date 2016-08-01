@@ -2,7 +2,7 @@
 from __future__ import unicode_literals
 
 from django.conf import settings
-from django.db.models.query import QuerySet, ValuesQuerySet
+from django.db.models.query import QuerySet
 from django.utils.safestring import mark_safe
 from django.core.paginator import Paginator
 import csv
@@ -130,7 +130,7 @@ class Report(object):
         if not self._sorted:
             self._sort_results()
         if self._data_type == 'qs':
-            if not isinstance(self._results, ValuesQuerySet):
+            if not self._is_value_qs(self._results):
                 return self._results.values()
             else:
                 return self._results
@@ -161,16 +161,26 @@ class Report(object):
             except KeyError:
                 return 'align-left'
 
+    def _is_value_qs(self, results):
+        if hasattr(results, 'field_names'):
+            # django <= 1.8
+            return results.field_names
+        elif hasattr(results.query, 'values_select'):
+            # Django >= 1.9
+            return results.query.values_select
+        else:
+            return []
+
     def get_fields(self):
         if self.fields is not None:
             fields = self.fields
         elif self._data_type == 'df':
             fields = self._results.columns
         elif self._data_type == 'qs':
-            if isinstance(self._results, ValuesQuerySet):
-                fields = self._results.field_names
-            else:
-                fields = self._results.values().field_names
+            values = self._is_value_qs(self._results)
+            if not values:
+                values = self._is_value_qs(self._results.values())
+            fields = values + self._results.query.annotations.keys() + self._results.query.extra.keys()
         else:
             try:
                 fields = self.get_results()[0].keys()
