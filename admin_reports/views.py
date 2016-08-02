@@ -270,6 +270,7 @@ class ReportView(TemplateView, FormMixin):
 
     def get_form(self, form_class=None):
         if form_class is None:
+            # If there's no form... there's no form.
             return None
         return super(ReportView, self).get_form(form_class)
 
@@ -282,8 +283,7 @@ class ReportView(TemplateView, FormMixin):
         export_path = '?%s' % '&'.join(['%s=%s' % item for item in self.request.GET.iteritems()] + [EXPORT_VAR])
         form = self.get_form(self.get_form_class())
         if form is not None:
-            if 'form' not in kwargs:
-                kwargs['form'] = form
+            kwargs['form'] = form
             if form.is_valid():
                 self.report.set_params(**form.cleaned_data)
         kwargs.update({
