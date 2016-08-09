@@ -1,3 +1,10 @@
+django-admin-reports (0.10.3) unstable; urgency=medium
+
+  * drop dependency from ValueQuerySet
+  * form with django 1.9 FormMixin
+
+ -- Marco Pattaro <marco.pattaro@simplyopen.org>  Tue, 09 Aug 2016 11:38:03 +0200
+
 django-admin-reports (0.10.2) unstable; urgency=medium
 
   * update setup.py to read version from __init__.py
