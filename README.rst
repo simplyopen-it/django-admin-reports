@@ -23,6 +23,9 @@ concentrating on implementing the aggregation procedure.
 Basic Usage
 ***********
 
+First of all add ``admin_reports`` to your project's ``INSTALLED_APPS`` settings
+variable; it's important that it is after ``django.contrib.admin``.
+
 Basically admin_reports provide your Django site with an abstract view
 ``Report``. All you need to do is give an implementation to the
 abstract method ``aggregate()``. The important thing is that this
