@@ -59,7 +59,7 @@ your class name.
 
 So for the example above::
 
-  /admin/myapp/myreport
+  /admin/myapp/myreport/
 
 The urlname to be passed to ``reverse`` will be the underscored
 version of your class name, so with the above example::
