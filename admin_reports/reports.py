@@ -70,7 +70,7 @@ class Report(object):
 
     def _sort_results(self):
         if self._data_type == 'qs':
-            return self._results.order_by(*self._sort_params)
+            self._results = self._results.order_by(*self._sort_params)
         elif self._data_type == 'df':
             columns = []
             ascending = []
