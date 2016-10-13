@@ -2,7 +2,7 @@
 from __future__ import unicode_literals
 
 from django.conf import settings
-from django.db.models.query import QuerySet
+from django.db.models.query import QuerySet, ValuesQuerySet
 from django.utils.safestring import mark_safe
 from django.core.paginator import Paginator
 import csv
@@ -54,12 +54,16 @@ class Report(object):
 
     def _split_totals(self, results):
         if self.has_totals and (len(results) > 0):
-            if pnd and isinstance(results, DataFrame):
+            if pnd and (self._data_type == 'df'):
                 self._results = results.iloc[:-1]
                 self._totals = results.iloc[-1]
+            elif self._data_type == 'qs':
+                self._results = results.exclude(pk=results.last().pk)
+                self._totals = results.last().__dict__
             else:
-                self._results = results[:-1]
-                self._totals = results[-1]
+                length = len(results)
+                self._results = results[:length-1]
+                self._totals = results[length-1]
         else:
             self._results = results
             self._totals = {}
@@ -90,7 +94,7 @@ class Report(object):
 
     def _eval(self):
         results = self.aggregate(**self._params)
-        if isinstance(results, QuerySet):
+        if isinstance(results, QuerySet) and not isinstance(results, ValuesQuerySet):
             self._data_type = 'qs'
         elif pnd and isinstance(results, DataFrame):
             self._data_type = 'df'
