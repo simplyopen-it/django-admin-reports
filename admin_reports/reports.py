@@ -2,7 +2,11 @@
 from __future__ import unicode_literals
 
 from django.conf import settings
-from django.db.models.query import QuerySet, ValuesQuerySet
+try:
+    from django.db.models.query import QuerySet, ValuesQuerySet
+except ImportError:
+    # django >= 1.9 does not have ValuesQuerySet anymore
+    from django.db.models.query import QuerySet, ModelIterable
 from django.utils.safestring import mark_safe
 from django.core.paginator import Paginator
 import csv
@@ -97,7 +101,11 @@ class Report(object):
 
     def _eval(self):
         results = self.aggregate(**self._params)
-        if isinstance(results, QuerySet) and not isinstance(results, ValuesQuerySet):
+        try:
+            values = isinstance(results, ValuesQuerySet)
+        except NameError:       # django >= 1.9
+            values = results._iterable_class is not ModelIterable
+        if isinstance(results, QuerySet) and not values:
             self._data_type = 'qs'
         elif pnd and isinstance(results, DataFrame):
             self._data_type = 'df'
