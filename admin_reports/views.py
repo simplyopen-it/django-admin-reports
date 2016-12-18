@@ -295,7 +295,7 @@ class ReportView(TemplateView, FormMixin):
             'export_path': export_path,
             'totals': self.report.get_has_totals(),
             'totals_on_top': self.report.totals_on_top,
-            'suit': 'suit' in settings.INSTALLED_APPS,
+            'suit': ('suit' in settings.INSTALLED_APPS) or ('bootstrap_admin' in settings.INSTALLED_APPS),
         })
         return kwargs
 
