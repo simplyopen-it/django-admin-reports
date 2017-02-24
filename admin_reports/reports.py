@@ -2,7 +2,11 @@
 from __future__ import unicode_literals
 
 from django.conf import settings
-from django.db.models.query import QuerySet, ValuesQuerySet
+try:
+    from django.db.models.query import QuerySet, ValuesQuerySet
+except ImportError:
+    # django >= 1.9 does not have ValuesQuerySet anymore
+    from django.db.models.query import QuerySet, ModelIterable
 from django.utils.safestring import mark_safe
 from django.core.paginator import Paginator
 import csv
@@ -33,6 +37,7 @@ class Report(object):
     form_class = None
     export_form_class = ExportForm
     initial = {}
+    auto_totals = None
 
     def __init__(self, sort_params=None, **kwargs):
         self._sort_params = sort_params if sort_params is not None else tuple()
@@ -41,6 +46,7 @@ class Report(object):
         self._results = []
         self._totals = {}
         self._evaluated = False
+        self._evaluated_totals = False
         self._sorted = False
 
     def __len__(self):
@@ -53,7 +59,7 @@ class Report(object):
         return len(self._results)
 
     def _split_totals(self, results):
-        if self.has_totals and (len(results) > 0):
+        if self.has_totals and (len(results) > 0) and (self.auto_totals is None):
             if pnd and (self._data_type == 'df'):
                 self._results = results.iloc[:-1]
                 self._totals = results.iloc[-1]
@@ -64,6 +70,7 @@ class Report(object):
                 length = len(results)
                 self._results = results[:length-1]
                 self._totals = results[length-1]
+            self._evaluated_totals = True
         else:
             self._results = results
             self._totals = {}
@@ -94,12 +101,32 @@ class Report(object):
 
     def _eval(self):
         results = self.aggregate(**self._params)
-        if isinstance(results, QuerySet) and not isinstance(results, ValuesQuerySet):
+        try:
+            values = isinstance(results, ValuesQuerySet)
+        except NameError:       # django >= 1.9
+            values = results._iterable_class is not ModelIterable
+        if isinstance(results, QuerySet) and not values:
             self._data_type = 'qs'
         elif pnd and isinstance(results, DataFrame):
             self._data_type = 'df'
         self._split_totals(results)
         self._evaluated = True
+
+    def _eval_totals(self):
+        if self._data_type == 'qs':
+            # TODO
+            pass
+        elif self._data_type == 'df':
+            # TODO
+            pass
+        else:
+            for field_name, _ in self.get_fields():
+                func = self.auto_totals.get(field_name, False)
+                if func:
+                    self._totals[field_name] = func([row[field_name] for row in self._results])
+                else:
+                    self._totals[field_name] = ''
+        self._evaluated_totals = True
 
     def _items(self, record):
         for field_name, _ in self.get_fields():
@@ -127,6 +154,7 @@ class Report(object):
     def reset(self):
         self._sorted = False
         self._evaluated = False
+        self._evaluated_totals = False
 
     def get_results(self):
         if not self._evaluated:
@@ -143,8 +171,11 @@ class Report(object):
         return self._results
 
     def get_totals(self):
-        if self.has_totals and not self._evaluated:
-            self._eval()
+        if self.has_totals:
+            if not self._evaluated:
+                self._eval()
+            if not self._evaluated_totals:
+                self._eval_totals()
         if self._data_type == 'qs':
             return dict(self._totals)
         elif self._data_type == 'df':
