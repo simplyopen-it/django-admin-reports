@@ -1,3 +1,17 @@
+django-admin-reports (0.10.4) unstable; urgency=medium
+
+  * update setup.py
+  * update README
+  * fix has_totals when workign with QuerySet and ValuesQuerySet
+  * update readme
+  * fix sorting in QuerySet case
+  * auto_totals basic idea
+  * ValuesQuerySet not present anymore in Django>=1.9
+  * pass get() and post() arguments to Report.__init__()
+  * apply correct table style with bootsrap_admin
+
+ -- Marco Pattaro <marco.pattaro@simplyopen.org>  Fri, 24 Feb 2017 15:27:23 +0100
+
 django-admin-reports (0.10.3) unstable; urgency=medium
 
   * drop dependency from ValueQuerySet
