@@ -104,7 +104,7 @@ class Report(object):
         try:
             values = isinstance(results, ValuesQuerySet)
         except NameError:       # django >= 1.9
-            values = results._iterable_class is not ModelIterable
+            values = results.__class__ is not ModelIterable
         if isinstance(results, QuerySet) and not values:
             self._data_type = 'qs'
         elif pnd and isinstance(results, DataFrame):
@@ -167,7 +167,10 @@ class Report(object):
             else:
                 return self._results
         elif self._data_type == 'df':
-            return self._results.to_dict(outtype='records')
+            try:                # pandas < 0.17
+                return self._results.to_dict(outtype='records')
+            except TypeError:
+                return self._results.to_dict(orient='records')
         return self._results
 
     def get_totals(self):
