@@ -216,7 +216,7 @@ class ReportView(TemplateView, FormMixin):
         # taken from django.contrib.admin.options ModelAdmin
         extra = '' if settings.DEBUG else '.min'
         # if VERSION <= (1, 8):
-        if StrictVersion(get_version()) <= StrictVersion('1.9'):
+        if StrictVersion(get_version()) < StrictVersion('1.9'):
             js = [
                 'core.js',
                 'admin/RelatedObjectLookups.js',
