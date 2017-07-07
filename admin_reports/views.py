@@ -2,7 +2,8 @@
 from __future__ import unicode_literals
 
 from collections import OrderedDict
-from django import VERSION
+from distutils.version import StrictVersion
+from django import get_version
 from django import forms
 from django.conf import settings
 from django.core.paginator import InvalidPage
@@ -214,7 +215,8 @@ class ReportView(TemplateView, FormMixin):
     def media(self):
         # taken from django.contrib.admin.options ModelAdmin
         extra = '' if settings.DEBUG else '.min'
-        if VERSION <= (1, 8):
+        # if VERSION <= (1, 8):
+        if StrictVersion(get_version()) <= StrictVersion('1.9'):
             js = [
                 'core.js',
                 'admin/RelatedObjectLookups.js',
