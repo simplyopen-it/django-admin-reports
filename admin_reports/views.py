@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 from collections import OrderedDict
+from django import VERSION
 from django import forms
 from django.conf import settings
 from django.core.paginator import InvalidPage
@@ -213,12 +214,24 @@ class ReportView(TemplateView, FormMixin):
     def media(self):
         # taken from django.contrib.admin.options ModelAdmin
         extra = '' if settings.DEBUG else '.min'
-        js = [
-            'core.js',
-            'admin/RelatedObjectLookups.js',
-            'jquery%s.js' % extra,
-            'jquery.init.js',
-        ]
+        if VERSION <= (1, 8):
+            js = [
+                'core.js',
+                'admin/RelatedObjectLookups.js',
+                'jquery%s.js' % extra,
+                'jquery.init.js',
+            ]
+        else:
+            js = [
+                'core.js',
+                'vendor/jquery/jquery%s.js' % extra,
+                'jquery.init.js',
+                'admin/RelatedObjectLookups.js',
+                'actions%s.js' % extra,
+                'urlify.js',
+                'prepopulate%s.js' % extra,
+                'vendor/xregexp/xregexp%s.js' % extra,
+            ]
         return forms.Media(js=[static('admin/js/%s' % url) for url in js])
 
     def _export(self, form=None):

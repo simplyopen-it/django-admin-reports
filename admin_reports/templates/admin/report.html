@@ -22,7 +22,9 @@
 
 {% block extrahead %}
   {{ block.super }}
+  <!-- POLLO -->
   {{ media.js }}
+  <!-- ENDPOLLO -->
   {% if has_filters %}
     {{ form.media.js }}
   {% endif %}

@@ -177,7 +177,7 @@ class Report(object):
         if self.has_totals:
             if not self._evaluated:
                 self._eval()
-            if not self._evaluated_totals:
+            if not self._evaluated_totals and self.auto_totals is not None:
                 self._eval_totals()
         if self._data_type == 'qs':
             return dict(self._totals)
