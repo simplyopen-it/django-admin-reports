@@ -239,7 +239,7 @@ class Report(object):
     def get_sort_params(self):
         return tuple(self._sort_params)
 
-    sort_params = property(set_sort_params, get_sort_params)
+    sort_params = property(get_sort_params, set_sort_params)
 
     def get_initial(self):
         return self.initial
