@@ -36,7 +36,7 @@ class AdminReportSite(object):
         for report in self._registry:
             app_name = apps.get_containing_app_config(report.__module__).name
             urlpatterns.append(
-                url(r"^%s/%s/" % (app_name, report.__name__.lower()),
+                url(r"^{0}/{1}/$".format(app_name.replace(".", "_"), report.__name__.lower()),
                     ReportView.as_view(report_class=report),
                     name=camel_re.sub(r'\1_\2', report.__name__).lower()
                 ))
