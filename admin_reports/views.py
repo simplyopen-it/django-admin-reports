@@ -11,11 +11,10 @@ from django.core.exceptions import PermissionDenied
 from django.views.generic.edit import FormMixin
 from django.views.generic import TemplateView
 from django.http import HttpResponse
-from django.template.context import RequestContext
 from django.utils.decorators import method_decorator
 from django.utils.http import urlencode
 from django.utils.html import format_html
-from django.shortcuts import render_to_response
+from django.shortcuts import render
 from django.contrib.admin.templatetags.admin_static import static
 from django.contrib.admin.options import IncorrectLookupParameters
 from django.contrib.admin import site
@@ -244,7 +243,7 @@ class ReportView(TemplateView, FormMixin):
             'back': '?%s' % '&'.join(['%s=%s' % param for param in self.request.GET.items()
                                       if param[0] != EXPORT_VAR]),
         }
-        return render_to_response('admin/export.html', RequestContext(self.request, ctx))
+        return render(self.request, 'admin/export.html', ctx)
 
     def post(self, *args, **kwargs):
         self.report = self.report_class(*args, **kwargs)
