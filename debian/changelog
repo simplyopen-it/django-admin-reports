@@ -1,3 +1,10 @@
+django-admin-reports (0.10.6) unstable; urgency=medium
+
+  [ maxicecilia ]
+  * Use render in favor of render_to_response to support django 1.8+
+
+ -- Marco Pattaro <marco.pattaro@simplyopen.org>  Fri, 15 Sep 2017 09:31:07 +0200
+
 django-admin-reports (0.10.5) unstable; urgency=medium
 
   [ Marco Pattaro ]

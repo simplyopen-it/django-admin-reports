@@ -3,7 +3,7 @@ from .decorators import register
 from .sites import AdminReportSite, site
 from .reports import Report
 
-__version__ = '0.10.5'
+__version__ = '0.10.6'
 __all__ = ["register", "AdminReportSite", "site", "Report"]
 
 
