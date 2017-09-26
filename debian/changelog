@@ -1,3 +1,14 @@
+django-admin-reports (0.10.7) unstable; urgency=medium
+
+  [ Ruslan Okopny ]
+  * Fix ValueError when order param is blank
+
+  [ Marco Pattaro ]
+  * update .gitignore
+  * bump new version
+
+ -- Marco Pattaro <marco.pattaro@simplyopen.org>  Tue, 26 Sep 2017 09:54:21 +0200
+
 django-admin-reports (0.10.6) unstable; urgency=medium
 
   [ maxicecilia ]
