@@ -64,8 +64,9 @@ class ReportList(object):
 
     def _get_ordering(self):
         ordering = []
-        if ORDER_VAR in self.params:
-            sort_values = self.params.get(ORDER_VAR).split('.')
+        order_params = self.params.get(ORDER_VAR)
+        if order_params:
+            sort_values = order_params.split('.')
             fields = self.report.get_fields()
             for o in sort_values:
                 if o.startswith('-'):
