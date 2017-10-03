@@ -49,18 +49,19 @@ class ReportList(object):
             new_params = {}
         if remove is None:
             remove = []
-        p = self.params.copy()
+        request = self.request.GET.copy()
         for r in remove:
-            for k in list(p):
+            for k in request.iterkeys():
                 if k.startswith(r):
-                    del p[k]
+                    del request[k]
+
         for k, v in new_params.items():
             if v is None:
-                if k in p:
-                    del p[k]
+                if k in request:
+                    del request[k]
             else:
-                p[k] = v
-        return '?%s' % urlencode(sorted(p.items()))
+                request[k] = v
+        return '?%s' % request.urlencode()
 
     def _get_ordering(self):
         ordering = []
@@ -271,8 +272,10 @@ class ReportView(TemplateView, FormMixin):
     def get_form_kwargs(self):
         kwargs = super(ReportView, self).get_form_kwargs()
         if self.request.method in ('GET', 'POST'):
-            form_data = dict([(key, val) for key, val in self.request.GET.iteritems()
-                              if key not in CONTROL_VARS])
+            form_data = self.request.GET.copy()
+            for key in CONTROL_VARS:
+                if key in form_data:
+                    del form_data[key]
             if form_data:
                 kwargs.update({
                     'data': form_data,
@@ -295,19 +298,19 @@ class ReportView(TemplateView, FormMixin):
     def get_context_data(self, **kwargs):
         kwargs = super(ReportView, self).get_context_data(**kwargs)
         kwargs['media'] = self.media
-        export_path = '?%s' % '&'.join(['%s=%s' % item for item in self.request.GET.iteritems()] + [EXPORT_VAR])
         form = self.get_form(self.get_form_class())
         if form is not None:
             kwargs['form'] = form
             if form.is_valid():
                 self.report.set_params(**form.cleaned_data)
+        rl = ReportList(self.request, self.report)
         kwargs.update({
-            'rl': ReportList(self.request, self.report),
+            'rl': rl,
             'title': self.report.get_title(),
             'has_filters': self.get_form_class() is not None,
             'help_text': self.report.get_help_text(),
             'description': self.report.get_description(),
-            'export_path': export_path,
+            'export_path': rl.get_query_string({EXPORT_VAR: ''}),
             'totals': self.report.get_has_totals(),
             'totals_on_top': self.report.totals_on_top,
             'suit': ('suit' in settings.INSTALLED_APPS) or ('bootstrap_admin' in settings.INSTALLED_APPS),
