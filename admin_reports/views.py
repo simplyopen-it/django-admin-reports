@@ -12,7 +12,6 @@ from django.views.generic.edit import FormMixin
 from django.views.generic import TemplateView
 from django.http import HttpResponse
 from django.utils.decorators import method_decorator
-from django.utils.http import urlencode
 from django.utils.html import format_html
 from django.shortcuts import render
 from django.contrib.admin.templatetags.admin_static import static
@@ -32,7 +31,6 @@ class ReportList(object):
     def __init__(self, request, report):
         self.request = request
         self.report = report
-        self.params = dict(self.request.GET.items())
         self.ordering_field_columns = self._get_ordering_field_columns()
         self.report.set_sort_params(*self._get_ordering())
         self.multi_page = False
@@ -49,23 +47,23 @@ class ReportList(object):
             new_params = {}
         if remove is None:
             remove = []
-        request = self.request.GET.copy()
+        params = self.request.GET.copy()
         for r in remove:
-            for k in request.iterkeys():
+            for k in params.iterkeys():
                 if k.startswith(r):
-                    del request[k]
+                    del params[k]
 
         for k, v in new_params.items():
             if v is None:
-                if k in request:
-                    del request[k]
+                if k in params:
+                    del params[k]
             else:
-                request[k] = v
-        return '?%s' % request.urlencode()
+                params[k] = v
+        return '?%s' % params.urlencode()
 
     def _get_ordering(self):
         ordering = []
-        order_params = self.params.get(ORDER_VAR)
+        order_params = self.request.GET.get(ORDER_VAR)
         if order_params:
             sort_values = order_params.split('.')
             fields = self.report.get_fields()
@@ -85,7 +83,7 @@ class ReportList(object):
         # field, so we base things on column numbers.
         ordering = []
         ordering_fields = OrderedDict()
-        if ORDER_VAR not in self.params:
+        if ORDER_VAR not in self.request.GET:
             # for ordering specified on ModelAdmin or model Meta, we don't know
             # the right column numbers absolutely, because there might be more
             # than one column associated with that ordering, so we guess.
@@ -100,7 +98,7 @@ class ReportList(object):
                         ordering_fields[index] = order_type
                         break
         else:
-            for p in self.params[ORDER_VAR].split('.'):
+            for p in self.request.GET[ORDER_VAR].split('.'):
                 _, pfx, idx = p.rpartition('-')
                 try:
                     idx = int(idx)
