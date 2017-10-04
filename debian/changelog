@@ -1,3 +1,16 @@
+django-admin-reports (0.10.8) unstable; urgency=medium
+
+  [ Marco Pattaro ]
+  * debian/changelog updated
+
+  [ Ruslan Okopny ]
+  * Fix bug with multi-select field
+
+  [ Marco Pattaro ]
+  * removed self.params attr from ReportList (useless)
+
+ -- Marco Pattaro <marco.pattaro@simplyopen.org>  Wed, 04 Oct 2017 11:31:52 +0200
+
 django-admin-reports (0.10.7) unstable; urgency=medium
 
   [ Ruslan Okopny ]
