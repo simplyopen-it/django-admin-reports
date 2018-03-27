@@ -245,7 +245,8 @@ class ReportView(TemplateView, FormMixin):
         }
         return render(self.request, 'admin/export.html', ctx)
 
-    def post(self, *args, **kwargs):
+    def post(self, request, *args, **kwargs):
+        # TODO: FIXME: you shouldn't just pass request args to Report __init__() this is straight up dangerous.
         self.report = self.report_class(*args, **kwargs)
         if not self.report.has_permission(self.request):
             raise PermissionDenied()
