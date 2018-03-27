@@ -266,7 +266,7 @@ class Report(object):
         return self.paginator(self.results, self.get_list_per_page())
 
     def get_list_max_show_all(self):
-        return self.get_list_max_show_all
+        return self.list_max_show_all
 
     def get_list_per_page(self):
         return self.list_per_page
