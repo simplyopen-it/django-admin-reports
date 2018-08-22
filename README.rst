@@ -52,7 +52,7 @@ Then in your django site ``urls.py`` add the following: ::
 
   urlpatterns = patterns(
       ...
-      url(r^admin/', include(admin.site.urls)),
+      url(r'^admin/', include(admin.site.urls)),
       url(r'^admin/', include(admin_reports.site.urls)),
       ...
   )
