@@ -28,7 +28,7 @@ CONTROL_VARS = [ALL_VAR, ORDER_VAR, PAGE_VAR, EXPORT_VAR]
 
 class ReportList(object):
 
-    def __init__(self, request, report):
+    def __init__(self, request, report, opts={}):
         self.request = request
         self.report = report
         self.ordering_field_columns = self._get_ordering_field_columns()
@@ -303,7 +303,10 @@ class ReportView(TemplateView, FormMixin):
             if form.is_valid():
                 self.report.set_params(**form.cleaned_data)
         rl = ReportList(self.request, self.report)
+        print(kwargs)
         kwargs.update({
+            # needed to get rendering to work
+            'opts': type('obj', (object,), {'app_label' : 'admin_reports', 'object_name': 'ReportList'}),
             'rl': rl,
             'title': self.report.get_title(),
             'has_filters': self.get_form_class() is not None,
