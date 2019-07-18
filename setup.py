@@ -1,35 +1,27 @@
-#!/usr/bin/env python
-import os
-import re
-import codecs
-from setuptools import setup, find_packages
-
-def find_version(*file_paths):
-    filename = os.path.join(os.path.dirname(__file__), *file_paths)
-    with codecs.open(filename, encoding='utf-8') as fp:
-        version_file = fp.read()
-    version_match = re.search(r"^__version__ = ['\"]([^'\"]*)['\"]",
-                              version_file, re.M)
-    if version_match:
-        return version_match.group(1)
-    raise RuntimeError("Unable to find version string.")
+from setuptools import find_packages, setup
+from admin_reports import __version__ as version_string
 
 setup(
-    name='admin_reports',
-    version=find_version('admin_reports', '__init__.py'),
+    name='django-admin-reports',
+    version=version_string,
     description='Reports for django-admin',
-    long_description="Easily define and show data analysis reports for django-admin.",
-    author='Simplyopen',
+    author='Simplyopen SRL',
     author_email='info@simplyopen.org',
     classifiers=[
-        "Development Status :: 5 - Production/Stable",
-        "Framework :: Django",
+        'Development Status :: 4 - Beta',
+        'Framework :: Django',
         "Intended Audience :: Developers",
-        "Operating System :: OS Independent",
-        "Topic :: Software Development",
+        'License :: OSI Approved :: MIT License',
+        'Operating System :: OS Independent',
+        'Programming Language :: Python',
+        'Programming Language :: Python :: 2.6',
+        'Programming Language :: Python :: 2.7',
+        'Topic :: Internet :: WWW/HTTP :: WSGI :: Application'
     ],
     packages=find_packages(),
-    package_dir={'admin_reports': 'admin_reports'},
     include_package_data=True,
-    install_requires=['Django>=1.7'],
+    zip_safe=False,
+    install_requires=[
+        'Django>=1.11',
+    ]
 )
