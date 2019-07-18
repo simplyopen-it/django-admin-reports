@@ -35,7 +35,7 @@ class ReportList(object):
         self.report.set_sort_params(*self._get_ordering())
         self.multi_page = False
         self.can_show_all = True
-        self.paginator = self.report.get_paginator()
+        self.paginator = None #self.report.get_paginator()
         try:
             self.page_num = int(self.request.GET.get(PAGE_VAR, 0))
         except ValueError:

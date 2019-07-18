@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+import logging
 from django.conf import settings
 try:
     from django.db.models.query import QuerySet, ValuesQuerySet
@@ -18,6 +19,7 @@ except ImportError:
     pnd = False
 from .forms import ExportForm
 
+logger = logging.getLogger(__name__)
 camel_re = re.compile('([a-z0-9])([A-Z])')
 
 
@@ -90,7 +92,7 @@ class Report(object):
                     ascending.append(1)
                     columns.append(param)
             if columns:
-                self._results = self._results.reset_index().sort(columns, ascending=ascending)
+                self._results = self._results.sort_values(columns, ascending=ascending)
         else:
             for param in reversed(self._sort_params):
                 reverse = False
@@ -168,10 +170,7 @@ class Report(object):
             else:
                 return self._results
         elif self._data_type == 'df':
-            try:                # pandas < 0.17
-                return self._results.to_dict(outtype='records')
-            except TypeError:
-                return self._results.to_dict(orient='records')
+            return self._results.to_dict(orient='records')
         return self._results
 
     def get_totals(self):
@@ -201,33 +200,29 @@ class Report(object):
                 return 'align-left'
 
     def _is_value_qs(self, results):
-        if hasattr(results, 'field_names'):
-            # django <= 1.8
-            return results.field_names
-        elif hasattr(results.query, 'values_select'):
-            # Django >= 1.9
+        if hasattr(results.query, 'values_select'):
             return results.query.values_select
-        else:
-            return []
+        return []
 
     def get_fields(self):
-        if self.fields is not None:
-            fields = self.fields
-        elif self._data_type == 'df':
-            fields = self._results.columns
-        elif self._data_type == 'qs':
-            values = self._is_value_qs(self._results)
-            if not values:
-                values = self._is_value_qs(self._results.values())
-            fields = values + self._results.query.annotations.keys() + self._results.query.extra.keys()
-        else:
-            try:
-                fields = self.get_results()[0].keys()
-            except IndexError:
-                fields = []
+        if not self._evaluated:
+            self._eval()
+        if self.fields is None:
+            if self._data_type == 'df':
+                self.fields = self._results.columns
+            elif self._data_type == 'qs':
+                values = self._is_value_qs(self._results)
+                if not values:
+                    values = self._is_value_qs(self._results.values())
+                    self.fields = values + self._results.query.annotations.keys() + self._results.query.extra.keys()
+            else:
+                try:
+                    self.fields = self.get_results()[0].keys()
+                except IndexError:
+                    self.fields = []
         return [field if isinstance(field, (list, tuple)) else
                 (field, ' '.join([s.title() for s in field.split('_')]))
-                for field in fields]
+                for field in self.fields]
 
     def set_params(self, **kwargs):
         self._params = kwargs

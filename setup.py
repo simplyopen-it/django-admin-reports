@@ -23,5 +23,6 @@ setup(
     zip_safe=False,
     install_requires=[
         'Django>=1.11',
+        'pandas>=0.18',
     ]
 )
