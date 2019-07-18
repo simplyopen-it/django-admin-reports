@@ -1,5 +1,6 @@
 from django.apps import apps
 from django.conf.urls import url
+from django.contrib.admin.sites import site as admin_site
 from .views import ReportView
 from .reports import Report, camel_re
 
@@ -37,7 +38,7 @@ class AdminReportSite(object):
             app_name = apps.get_containing_app_config(report.__module__).name
             urlpatterns.append(
                 url(r"^{0}/{1}/$".format(app_name.replace(".", "_"), report.__name__.lower()),
-                    ReportView.as_view(report_class=report),
+                    admin_site.admin_view(ReportView.as_view(report_class=report)),
                     name=camel_re.sub(r'\1_\2', report.__name__).lower()
                 ))
         return urlpatterns

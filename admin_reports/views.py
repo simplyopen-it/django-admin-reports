@@ -11,14 +11,11 @@ from django.core.exceptions import PermissionDenied
 from django.views.generic.edit import FormMixin
 from django.views.generic import TemplateView
 from django.http import HttpResponse
-from django.utils.decorators import method_decorator
 from django.utils.html import format_html
 from django.shortcuts import render
 from django.contrib.admin.templatetags.admin_static import static
 from django.contrib.admin.options import IncorrectLookupParameters
-from django.contrib.admin import site
 
-admin_view_m = method_decorator(site.admin_view)
 ALL_VAR = 'all'
 ORDER_VAR = 'o'
 PAGE_VAR = 'p'
@@ -196,7 +193,6 @@ class ReportView(TemplateView, FormMixin):
 
     report_class = None
 
-    @admin_view_m
     def dispatch(self, request, *args, **kwargs):
         return super(ReportView, self).dispatch(request, *args, **kwargs)
 
