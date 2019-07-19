@@ -2,6 +2,8 @@
 from __future__ import unicode_literals
 
 import logging
+import csv
+import re
 from django.conf import settings
 try:
     from django.db.models.query import QuerySet, ValuesQuerySet
@@ -10,8 +12,6 @@ except ImportError:
     from django.db.models.query import QuerySet, ModelIterable
 from django.utils.safestring import mark_safe
 from django.core.paginator import Paginator
-import csv
-import re
 try:
     pnd = True
     from pandas import DataFrame

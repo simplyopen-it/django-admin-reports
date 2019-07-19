@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+
 from django.apps import apps
 from django.conf.urls import url
 from django.contrib.admin.sites import site as admin_site

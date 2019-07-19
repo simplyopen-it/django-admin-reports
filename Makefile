@@ -8,7 +8,7 @@ DJANGO_ADMIN=/usr/bin/env django-admin
 all: sdist
 
 clean:
-	rm -fr dist *.egg-info
+	rm -fr dist *.egg-info build
 	find . \( -name "*.py[co]" -o -name "*.mo" -o -name "*~" \) -type f -delete
 
 sdist: clean
