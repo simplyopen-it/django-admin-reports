@@ -1,10 +1,13 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+import logging
 from collections import OrderedDict
 from distutils.version import StrictVersion
+
 from django import get_version
 from django import forms
+from django.apps import apps
 from django.conf import settings
 from django.core.paginator import InvalidPage
 from django.core.exceptions import PermissionDenied
@@ -15,6 +18,8 @@ from django.utils.html import format_html
 from django.shortcuts import render
 from django.contrib.admin.templatetags.admin_static import static
 from django.contrib.admin.options import IncorrectLookupParameters
+
+logger = logging.getLogger(__name__)
 
 ALL_VAR = 'all'
 ORDER_VAR = 'o'
@@ -189,12 +194,27 @@ class ReportList(object):
         return records
 
 
+class Opts(object):
+
+    def __init__(self, report):
+        self._report = report
+        module = self._report.__class__.__module__
+        app_config = apps.get_containing_app_config(module)
+        self._app_label = app_config.label
+        self._object_name = self._report.__class__.__name__
+
+    def get_app_label(self):
+        return self._app_label
+    app_label = property(get_app_label)
+
+    def get_object_name(self):
+        return self._object_name
+    object_name = property(get_object_name)
+
+
 class ReportView(TemplateView, FormMixin):
 
     report_class = None
-
-    def dispatch(self, request, *args, **kwargs):
-        return super(ReportView, self).dispatch(request, *args, **kwargs)
 
     def __init__(self, report_class, *args, **kwargs):
         super(ReportView, self).__init__(*args, **kwargs)
@@ -301,6 +321,7 @@ class ReportView(TemplateView, FormMixin):
         rl = ReportList(self.request, self.report)
         kwargs.update({
             'rl': rl,
+            'opts': Opts(self.report),
             'title': self.report.get_title(),
             'has_filters': self.get_form_class() is not None,
             'help_text': self.report.get_help_text(),
