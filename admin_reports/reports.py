@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 import logging
+import six
 import csv
 import re
 from django.conf import settings
@@ -214,7 +215,10 @@ class Report(object):
                 values = self._is_value_qs(self._results)
                 if not values:
                     values = self._is_value_qs(self._results.values())
-                    self.fields = values + self._results.query.annotations.keys() + self._results.query.extra.keys()
+                    self.fields = (
+                        values
+                        + self._results.query.annotations.keys()
+                        + self._results.query.extra.keys())
             else:
                 try:
                     self.fields = self.get_results()[0].keys()
@@ -304,10 +308,22 @@ class Report(object):
         if extra_rows is not None:
             writer.writerows(extra_rows)
         if header:
-            writer.writerow([name.encode(settings.DEFAULT_CHARSET) for name, _ in self.get_fields()])
+            if six.PY2:
+                writer.writerow([
+                    name.encode(settings.DEFAULT_CHARSET)
+                    for name, _ in self.get_fields()
+                ])
+            else:
+                writer.writerow([name for name, _ in self.get_fields()])
         for record in self.iter_results():
-            writer.writerow([elem.encode(settings.DEFAULT_CHARSET) if isinstance(elem, unicode) else elem
-                             for elem in record])
+            if six.PY2:
+                writer.writerow([
+                    elem.encode(settings.DEFAULT_CHARSET)
+                    if isinstance(elem, six.text_type) else elem
+                    for elem in record
+                ])
+            else:
+                writer.writerow(record)
         if totals and self.get_has_totals():
             writer.writerow(self.totals)
 

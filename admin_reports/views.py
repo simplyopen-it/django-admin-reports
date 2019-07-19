@@ -3,9 +3,7 @@ from __future__ import unicode_literals
 
 import logging
 from collections import OrderedDict
-from distutils.version import StrictVersion
 
-from django import get_version
 from django import forms
 from django.apps import apps
 from django.conf import settings
@@ -230,25 +228,16 @@ class ReportView(TemplateView, FormMixin):
     def media(self):
         # taken from django.contrib.admin.options ModelAdmin
         extra = '' if settings.DEBUG else '.min'
-        # if VERSION <= (1, 8):
-        if StrictVersion(get_version()) < StrictVersion('1.9'):
-            js = [
-                'core.js',
-                'admin/RelatedObjectLookups.js',
-                'jquery%s.js' % extra,
-                'jquery.init.js',
-            ]
-        else:
-            js = [
-                'core.js',
-                'vendor/jquery/jquery%s.js' % extra,
-                'jquery.init.js',
-                'admin/RelatedObjectLookups.js',
-                'actions%s.js' % extra,
-                'urlify.js',
-                'prepopulate%s.js' % extra,
-                'vendor/xregexp/xregexp%s.js' % extra,
-            ]
+        js = [
+            'core.js',
+            'vendor/jquery/jquery%s.js' % extra,
+            'jquery.init.js',
+            'admin/RelatedObjectLookups.js',
+            'actions%s.js' % extra,
+            'urlify.js',
+            'prepopulate%s.js' % extra,
+            'vendor/xregexp/xregexp%s.js' % extra,
+        ]
         return forms.Media(js=[static('admin/js/%s' % url) for url in js])
 
     def _export(self, form=None):
@@ -262,7 +251,6 @@ class ReportView(TemplateView, FormMixin):
         return render(self.request, 'admin/export.html', ctx)
 
     def post(self, request, *args, **kwargs):
-        # TODO: FIXME: you shouldn't just pass request args to Report __init__() this is straight up dangerous.
         self.report = self.report_class(*args, **kwargs)
         if not self.report.has_permission(self.request):
             raise PermissionDenied()
@@ -329,7 +317,8 @@ class ReportView(TemplateView, FormMixin):
             'export_path': rl.get_query_string({EXPORT_VAR: ''}),
             'totals': self.report.get_has_totals(),
             'totals_on_top': self.report.totals_on_top,
-            'suit': ('suit' in settings.INSTALLED_APPS) or ('bootstrap_admin' in settings.INSTALLED_APPS),
+            'suit': (('suit' in settings.INSTALLED_APPS) or
+                     ('bootstrap_admin' in settings.INSTALLED_APPS)),
         })
         return kwargs
 

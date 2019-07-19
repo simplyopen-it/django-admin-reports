@@ -68,7 +68,7 @@
                     </span>
                   {% endspaceless %}
                   <input type="submit" value="{% trans 'Search' %}" class="btn btn-info"/>
-                  <a href="{{ export_path }}" class="btn">{% trans 'Export' %}</a>
+
                   <span class="small quiet result-count">
                     {{ rl.get_result_count }} {% trans 'results' %}
                     <a href="?">{% trans 'Clear query' %}</a>
@@ -76,6 +76,7 @@
                 </div>
               {% endif %}
             </form>
+            <a href="{{ export_path }}" class="btn">{% trans 'Export' %}</a>
           {% endblock %}
         </div>
 
