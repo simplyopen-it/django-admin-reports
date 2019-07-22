@@ -7,5 +7,5 @@ except ImportError:
 else:
     __all__ = ["register", "Report", "site"]
 
-__version__ = '0.10.8'
+__version__ = '0.11.0'
 default_app_config = 'admin_reports.apps.AdminReportConfig'
