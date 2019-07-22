@@ -1,5 +1,5 @@
-.. image:: https://img.shields.io/pypi/v/admin_reports.svg
-   :target: https://pypi.python.org/pypi/admin_reports
+.. image:: https://img.shields.io/pypi/v/django-admin-reports.svg
+   :target: https://pypi.python.org/pypi/django-admin-reports
 
 ====================
 django-admin-reports
