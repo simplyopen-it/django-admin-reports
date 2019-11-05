@@ -3,10 +3,20 @@ from admin_reports import __version__ as version_string
 
 setup(
     name='django-admin-reports',
+    # packages=find_packages(),
+    packages = ['admin_reports'],
     version=version_string,
+    license='MIT',
     description='Reports for django-admin',
     author='Simplyopen SRL',
     author_email='info@simplyopen.org',
+    url='https://github.com/mohitgoel188/django-admin-reports',
+    download_url = 'https://github.com/user/reponame/archive/v_01.tar.gz',
+    keywords = 'django admin reports',
+    install_requires=[
+        'Django>=1.11',
+        'pandas>=0.18',
+    ],
     classifiers=[
         'Development Status :: 4 - Beta',
         'Framework :: Django',
@@ -18,11 +28,6 @@ setup(
         'Programming Language :: Python :: 2.7',
         'Topic :: Internet :: WWW/HTTP :: WSGI :: Application'
     ],
-    packages=find_packages(),
     include_package_data=True,
     zip_safe=False,
-    install_requires=[
-        'Django>=1.11',
-        'pandas>=0.18',
-    ]
 )

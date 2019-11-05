@@ -7,7 +7,7 @@ escapechars = " \\"
 
 
 class ExportForm(forms.Form):
-    ''' Let an admin user costomize a CSV export.
+    ''' Let an admin user customize a CSV export.
     '''
     header = forms.BooleanField(required=False, initial=True)
     totals = forms.BooleanField(required=False, initial=True)
