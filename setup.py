@@ -11,7 +11,7 @@ setup(
     author='Simplyopen SRL',
     author_email='info@simplyopen.org',
     url='https://github.com/mohitgoel188/django-admin-reports',
-    download_url = 'https://github.com/user/reponame/archive/v_01.tar.gz',
+    # download_url = 'https://github.com/user/reponame/archive/v_01.tar.gz',
     keywords = 'django admin reports',
     install_requires=[
         'Django>=1.11',
