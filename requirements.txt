@@ -1,0 +1,5 @@
+setuptools==41.0.1
+pandas==0.24.2
+six==1.11.0
+Django==1.11.10
+
