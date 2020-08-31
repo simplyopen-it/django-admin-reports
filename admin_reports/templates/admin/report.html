@@ -1,18 +1,22 @@
 {% extends "admin/base_site.html" %}
-{% load i18n admin_urls admin_static admin_list %}
+{% load i18n admin_urls static admin_list %}
 
 {% block extrastyle %}
   {{ block.super }}
+  {% comment %}
   {% if suit %}
-    <link rel="stylesheet" type="text/css" href="/static/suit/css/suit.css" media="all">
+  <link rel="stylesheet" type="text/css" href="/static/suit/css/suit.css" media="all">
+  {% endif %}
+  {% endcomment %}
+  {% if not suit %}
+    <link rel="stylesheet" type="text/css" href="{% static "admin/css/changelists.css" %}" />
   {% endif %}
   {% if has_filters %}
-    <link rel="stylesheet" type="text/css" href='{% static "admin/css/forms.css" %}' />
+    <link rel="stylesheet" type="text/css" href="{% static "admin/css/forms.css" %}" />
     <script type="text/javascript" src="{% url 'admin:jsi18n' %}"></script>
-  {{ form.media.css }}
+    {{ form.media.css }}
   {% endif %}
-  <link rel="stylesheet" type="text/css" href='{% static "admin_report/css/reportlist.css" %}'/>
-  <link rel="stylesheet" type="text/css" href='{% static "admin/css/changelists.css" %}' />
+  <link rel="stylesheet" type="text/css" href="{% static "admin_report/css/reportlist.css" %}"/>
   {{ media.css }}
 {% endblock %}
 
@@ -24,78 +28,56 @@
   {% endif %}
 {% endblock %}
 
-{% block bodyclass %}report change-list{% endblock %}
+{% block bodyclass %}report{% endblock %}
 
 {% block coltype %}flex{% endblock %}
 
-{% block content_title %}
-  <h1>{{title}}</h1>
-{% endblock %}
-
-{% block title_text %}
-  <div id="description" class="clerfix" style="padding-left:10px;">
-    {% if description %}<p>{{ description }}</p>{% endif %}
-    {% if help_text %}<span style="cursor:pointer; color:#295584; text-decoration:underline;" onclick="javascript:$('#help-text').toggle();">See more</span>{% endif %}
-  </div>
-  <div id="help-text" class="help clearfix" style="display:none; margin-top:5px; margin-bottom:5px; border:1px solid #f9f9f9; background:#fff; padding:10px; ">
-    {{ help_text }}
-  </div>
-{% endblock %}
-
 {% block content %}
   <div id="content-main">
-    {% block object-tools %}
-        <ul class="object-tools">
-          {% block object-tools-items %}
-            <li>
-              <a href="{{ export_path }}" class="btn btn-info">
-                {% trans 'Export' %}
-              </a>
-            </li>
-          {% endblock %}
-        </ul>
-    {% endblock %}
+    <div class="inner-center-column">
 
-    <div id="changelist" class="module filtered">
-      <div id="toolbar" {% if suit %}class="clearfix"{% endif %}>
-        <span class="small quiet result-count">
-          {{ rl.get_result_count }} {% trans 'results' %}
-          <a href="?">{% trans 'Clear query' %}</a>
-        </span>
-      </div>
-
-      {% block filters %}
-        {% if has_filters %}
-          <div id="changelist-filter" {% if suit %} class="clearfix" {% endif %}>
-            <h2>{% trans 'Filter' %}</h2>
-              <form id="report-search" action="" method="get" class="form-inline">
-                {% for field in form %}
-                  <h3>{{ field.label}}</h3>
-                  <ul>
-                    <li>
-                      <p class="errorlist" style="color:red">
-                      {% for error in field.errors %}
-                        {{ error }}
-                      {% endfor %}
-                      </p>
-                      {{ field }}
-                      {% if field.help_text %}
-                      <p class="help">{{ field.help_text|safe }}</p>
-                      {% endif %}
-                    </li>
-                  </ul>
-                {% endfor %}
-                <input type="submit" value="{% trans 'Filter' %}" class="btn btn-info"/>
-              </form>
+      {% block title_text %}
+        {% if suit %}
+          <div id="title" class="title clearfix" style="padding-left:10px;">
+            <h3 style="padding:0px;">{{ title }}</h3>
           </div>
         {% endif %}
+
+        <div id="description" class="clerfix" style="padding-left:10px;">
+          {% if description %}<p>{{ description }}</p>{% endif %}
+          {% if help_text %}<span style="cursor:pointer; color:#295584; text-decoration:underline;" onclick="javascript:$('#help-text').toggle();">See more</span>{% endif %}
+        </div>
+
+        <div id="help-text" class="help clearfix" style="display:none; margin-top:5px; margin-bottom:5px; border:1px solid #f9f9f9; background:#fff; padding:10px; ">
+          {{ help_text }}
+        </div>
       {% endblock %}
 
-    {% block result_list %}
-      <form id="changelist-form" method="post"{% if cl.formset.is_multipart %} enctype="multipart/form-data"{% endif %} novalidate>{% csrf_token %}
-        <div class="actions">
-          <span class="small quiet result-count">
-          </span>
+      <p>&nbsp;</p>
+
+      <div id="changelist" class="{% if suit %}module-filtered{% else %}toolbar-content module{% endif %}">
+
+        <div id="toolbar" {% if suit %}class="clearfix"{% endif %}>
+          {% block search %}
+            <form id="report-search" action="" method="get" class="form-inline">
+              {% if has_filters %}
+                <div>
+                  {% spaceless %}
+                    <span class="search-filters">
+                      {{ form }}
+                    </span>
+                  {% endspaceless %}
+                  <input type="submit" value="{% trans 'Search' %}" class="btn btn-info"/>
+
+                  <span class="small quiet result-count">
+                    {{ rl.get_result_count }} {% trans 'results' %}
+                    <a href="?">{% trans 'Clear query' %}</a>
+                  </span>
+                </div>
+              {% endif %}
+            </form>
+            <a href="{{ export_path }}" class="btn">{% trans 'Export' %}</a>
+          {% endblock %}
         </div>
 
         <div class="results">
@@ -112,10 +94,10 @@
 
                               {% if rl.num_sorted_fields > 1 %}<span class="sortpriority" title="{% blocktrans with priority_number=header.sort_priority %}Sorting priority: {{ priority_number }}{% endblocktrans %}">{{ header.sort_priority }}</span>{% endif %}
 
-                              <a href="{{ header.url_toggle }}" class="toggle {% if header.ascending %}ascending{% else %}descending{% endif %}" title='{% trans "Toggle sorting" %}'></a>
-                              <a class="sortremove" href="{{ header.url_remove }}" title='{% trans "Remove from sorting" %}'></a>
-                            </div>
-                          {% if suit %}</div>{% endif %}
+                              <a href="{{ header.url_toggle }}" class="toggle {% if header.ascending %}ascending{% else %}descending{% endif %}" title="{% trans "Toggle sorting" %}"></a>
+                              <a class="sortremove" href="{{ header.url_remove }}" title="{% trans "Remove from sorting" %}"></a>
+                              {% if suit %}</div>{% endif %}
+                          </div>
                         {% endif %}
                       {% endif %}
                       <div class="text">{% if header.sortable %}<a href="{{ header.url_primary }}">{{ header.label|capfirst }}</a>{% else %}<span>{{ header.label|capfirst }}</span>{% endif %}</div>
@@ -146,11 +128,10 @@
             </table>
           {% endblock %}
         </div>
-        {% block pagination %}{% pagination rl %}{% endblock %}
-      </form>
-    </div>
-    {% endblock %}
 
+        {% block pagination %}{% pagination rl %}{% endblock %}
+
+      </div>
+    </div>
   </div>
 {% endblock %}
-
