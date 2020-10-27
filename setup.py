@@ -7,6 +7,7 @@ setup(
     description='Reports for django-admin',
     author='Simplyopen SRL',
     author_email='info@simplyopen.org',
+    url='https://github.com/simplyopen-it/django-admin-reports',
     classifiers=[
         'Development Status :: 4 - Beta',
         'Framework :: Django',
