@@ -1,5 +1,7 @@
 .. image:: https://img.shields.io/pypi/v/django-admin-reports.svg
    :target: https://pypi.python.org/pypi/django-admin-reports
+.. image:: https://img.shields.io/badge/code%20style-black-000000.svg
+   :target: https://github.com/psf/black
 
 ====================
 django-admin-reports
@@ -41,7 +43,7 @@ A stupid example could be this: ::
       def aggregate(self, **kwargs):
           return [
               dict([(k, v) for v, k in enumerate('abcdefgh')]),
-              dict([(k, v) for v, k in enumerate('abcdefgh')]),
+              dict([(k, v) for v, k in enumerate('abcdefgh')]),..
           ]
 
 
