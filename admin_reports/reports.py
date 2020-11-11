@@ -44,15 +44,12 @@ class Report(object):
     initial = {}
     auto_totals = None
 
-    def __init__(self, sort_params=None, **kwargs):
-        self._sort_params = sort_params if sort_params is not None else tuple()
-        self._params = kwargs if kwargs else self.get_initial()
+    def __init__(self, *args, **kwargs):
+        self.set_sort_params()
+        self.set_params(**self.get_initial())
         self._data_type = "list"
         self._results = []
         self._totals = {}
-        self._evaluated = False
-        self._evaluated_totals = False
-        self._sorted = False
 
     def __len__(self):
         if not self._evaluated:
@@ -124,7 +121,7 @@ class Report(object):
         if self._data_type == "qs":
             # TODO
             pass
-        elif self._data_type == "df":
+        elif pnd and self._data_type == "df":
             # TODO
             pass
         else:
@@ -241,6 +238,7 @@ class Report(object):
     def set_params(self, **kwargs):
         self._params = kwargs
         self._evaluated = False
+        self._evaluated_totals = False
 
     def set_sort_params(self, *sort_params):
         self._sort_params = tuple(sort_params)
@@ -297,10 +295,6 @@ class Report(object):
     @property
     def totals(self):
         return tuple([elem for elem in self.iter_totals()])
-
-    def sort(self, *sort_params):
-        self._sort_params = sort_params
-        return self.results
 
     def aggregate(self, **kwargs):
         """ Implement here your data elaboration.

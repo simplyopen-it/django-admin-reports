@@ -8,7 +8,7 @@ from django import forms
 from django.apps import apps
 from django.conf import settings
 from django.core.paginator import InvalidPage
-from django.core.exceptions import PermissionDenied
+from django.core.exceptions import PermissionDenied, ImproperlyConfigured
 from django.views.generic.edit import FormMixin
 from django.views.generic import TemplateView
 from django.http import HttpResponse
@@ -273,8 +273,26 @@ class ReportView(TemplateView, FormMixin):
         }
         return render(self.request, "admin/export.html", ctx)
 
+    def get_report_class(self):
+        if self.report_class is None:
+            raise ImproperlyConfigured(
+                "You must specify `report_class` or override `get_report_class`"
+            )
+        return self.report_class
+
+    def get_report_args(self):
+        return []
+
+    def get_report_kwargs(self):
+        return {}
+
+    def get_report(self, report_class=None):
+        if report_class is None:
+            report_class = self.get_report_class()
+        return report_class(*self.get_report_args(), **self.get_report_kwargs())
+
     def post(self, request, *args, **kwargs):
-        self.report = self.report_class(*args, **kwargs)
+        self.report = self.get_report()
         if not self.report.has_permission(self.request):
             raise PermissionDenied()
         form = self.get_export_form(data=self.request.POST)
@@ -288,7 +306,7 @@ class ReportView(TemplateView, FormMixin):
         return self._export(form=form)
 
     def get(self, request, *args, **kwargs):
-        self.report = self.report_class(*args, **kwargs)
+        self.report = self.get_report()
         if not self.report.has_permission(request):
             raise PermissionDenied()
         if EXPORT_VAR in request.GET:
@@ -303,9 +321,7 @@ class ReportView(TemplateView, FormMixin):
                 if key in form_data:
                     del form_data[key]
             if form_data:
-                kwargs.update(
-                    {"data": form_data,}
-                )
+                kwargs.update({"data": form_data})
             else:
                 kwargs.update({"data": kwargs["initial"]})
         return kwargs
