@@ -1,7 +1,5 @@
-<p align="center">
-<a href="https://pypi.python.org/pypi/django-admin-reports"><img alt="PyPI" src="https://img.shields.io/pypi/v/django-admin-reports.svg"></a>
-<a href="https://github.com/psf/black"><img alt="Code style: black" src="https://img.shields.io/badge/code%20style-black-000000.svg"></a>
-</p>
+.. image:: https://img.shields.io/pypi/v/django-admin-reports.svg
+   :target: https://pypi.python.org/pypi/django-admin-reports
 
 ====================
 django-admin-reports
