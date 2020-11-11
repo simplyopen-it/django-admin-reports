@@ -14,6 +14,7 @@ from django.views.generic import TemplateView
 from django.http import HttpResponse
 from django.utils.html import format_html
 from django.shortcuts import render
+
 try:
     # Django 2
     from django.contrib.staticfiles.templatetags.staticfiles import static
@@ -24,15 +25,14 @@ from django.contrib.admin.options import IncorrectLookupParameters
 
 logger = logging.getLogger(__name__)
 
-ALL_VAR = 'all'
-ORDER_VAR = 'o'
-PAGE_VAR = 'p'
-EXPORT_VAR = 'e'
+ALL_VAR = "all"
+ORDER_VAR = "o"
+PAGE_VAR = "p"
+EXPORT_VAR = "e"
 CONTROL_VARS = [ALL_VAR, ORDER_VAR, PAGE_VAR, EXPORT_VAR]
 
 
 class ReportList(object):
-
     def __init__(self, request, report):
         self.request = request
         self.report = report
@@ -40,7 +40,7 @@ class ReportList(object):
         self.report.set_sort_params(*self._get_ordering())
         self.multi_page = False
         self.can_show_all = True
-        self.paginator = None #self.report.get_paginator()
+        self.paginator = None  # self.report.get_paginator()
         try:
             self.page_num = int(self.request.GET.get(PAGE_VAR, 0))
         except ValueError:
@@ -64,17 +64,17 @@ class ReportList(object):
                     del params[k]
             else:
                 params[k] = v
-        return '?%s' % params.urlencode()
+        return "?%s" % params.urlencode()
 
     def _get_ordering(self):
         ordering = []
         order_params = self.request.GET.get(ORDER_VAR)
         if order_params:
-            sort_values = order_params.split('.')
+            sort_values = order_params.split(".")
             fields = self.report.get_fields()
             for o in sort_values:
-                if o.startswith('-'):
-                    field = '-%s' % fields[int(o.replace('-', ''))][0]
+                if o.startswith("-"):
+                    field = "-%s" % fields[int(o.replace("-", ""))][0]
                 else:
                     field = fields[int(o)][0]
                 ordering.append(field)
@@ -93,23 +93,23 @@ class ReportList(object):
             # the right column numbers absolutely, because there might be more
             # than one column associated with that ordering, so we guess.
             for field in ordering:
-                if field.startswith('-'):
+                if field.startswith("-"):
                     field = field[1:]
-                    order_type = 'desc'
+                    order_type = "desc"
                 else:
-                    order_type = 'asc'
+                    order_type = "asc"
                 for index, attr in enumerate(self.list_display):
                     if self.get_ordering_field(attr) == field:
                         ordering_fields[index] = order_type
                         break
         else:
-            for p in self.request.GET[ORDER_VAR].split('.'):
-                _, pfx, idx = p.rpartition('-')
+            for p in self.request.GET[ORDER_VAR].split("."):
+                _, pfx, idx = p.rpartition("-")
                 try:
                     idx = int(idx)
                 except ValueError:
                     continue  # skip it
-                ordering_fields[idx] = 'desc' if pfx == '-' else 'asc'
+                ordering_fields[idx] = "desc" if pfx == "-" else "asc"
         return ordering_fields
 
     def headers(self):
@@ -119,14 +119,14 @@ class ReportList(object):
             label = field[1]
             if callable(getattr(self.report, name, name)):
                 yield {
-                    'label': label,
-                    'class_attrib': format_html(' class="column-{0}"', name),
-                    'sortable': False,
+                    "label": label,
+                    "class_attrib": format_html(' class="column-{0}"', name),
+                    "sortable": False,
                 }
                 continue
-            th_classes = ['sortable', 'column-{0}'.format(name)]
-            order_type = ''
-            new_order_type = 'asc'
+            th_classes = ["sortable", "column-{0}".format(name)]
+            order_type = ""
+            new_order_type = "asc"
             sort_priority = 0
             sorted_ = False
             # Is it currently being sorted on?
@@ -134,13 +134,13 @@ class ReportList(object):
                 sorted_ = True
                 order_type = self.ordering_field_columns.get(i).lower()
                 sort_priority = list(self.ordering_field_columns).index(i) + 1
-                th_classes.append('sorted %sending' % order_type)
-                new_order_type = {'asc': 'desc', 'desc': 'asc'}[order_type]
+                th_classes.append("sorted %sending" % order_type)
+                new_order_type = {"asc": "desc", "desc": "asc"}[order_type]
             # build new ordering param
             o_list_primary = []  # URL for making this field the primary sort
             o_list_remove = []  # URL for removing this field from sort
             o_list_toggle = []  # URL for toggling order type for this field
-            make_qs_param = lambda t, n: ('-' if t == 'desc' else '') + str(n)
+            make_qs_param = lambda t, n: ("-" if t == "desc" else "") + str(n)
             for j, ot in self.ordering_field_columns.items():
                 if j == i:  # Same column
                     param = make_qs_param(new_order_type, j)
@@ -162,10 +162,18 @@ class ReportList(object):
                 "sorted": sorted_,
                 "ascending": order_type == "asc",
                 "sort_priority": sort_priority,
-                "url_primary": self.get_query_string({ORDER_VAR: '.'.join(o_list_primary)}),
-                "url_remove": self.get_query_string({ORDER_VAR: '.'.join(o_list_remove)}),
-                "url_toggle": self.get_query_string({ORDER_VAR: '.'.join(o_list_toggle)}),
-                "class_attrib": format_html(' class="{0}"', ' '.join(th_classes)) if th_classes else '',
+                "url_primary": self.get_query_string(
+                    {ORDER_VAR: ".".join(o_list_primary)}
+                ),
+                "url_remove": self.get_query_string(
+                    {ORDER_VAR: ".".join(o_list_remove)}
+                ),
+                "url_toggle": self.get_query_string(
+                    {ORDER_VAR: ".".join(o_list_toggle)}
+                ),
+                "class_attrib": format_html(' class="{0}"', " ".join(th_classes))
+                if th_classes
+                else "",
             }
 
     @property
@@ -178,7 +186,10 @@ class ReportList(object):
     def results(self):
         fields = self.report.get_fields()
         for record in self.paginate():
-            yield [(self.report.get_alignment(fields[idx][0]), value) for idx, value in enumerate(record)]
+            yield [
+                (self.report.get_alignment(fields[idx][0]), value)
+                for idx, value in enumerate(record)
+            ]
 
     def get_result_count(self):
         return len(self.report)
@@ -198,7 +209,6 @@ class ReportList(object):
 
 
 class Opts(object):
-
     def __init__(self, report):
         self._report = report
         module = self._report.__class__.__module__
@@ -208,10 +218,12 @@ class Opts(object):
 
     def get_app_label(self):
         return self._app_label
+
     app_label = property(get_app_label)
 
     def get_object_name(self):
         return self._object_name
+
     object_name = property(get_object_name)
 
 
@@ -232,28 +244,34 @@ class ReportView(TemplateView, FormMixin):
     @property
     def media(self):
         # taken from django.contrib.admin.options ModelAdmin
-        extra = '' if settings.DEBUG else '.min'
+        extra = "" if settings.DEBUG else ".min"
         js = [
-            'core.js',
-            'vendor/jquery/jquery%s.js' % extra,
-            'jquery.init.js',
-            'admin/RelatedObjectLookups.js',
-            'actions%s.js' % extra,
-            'urlify.js',
-            'prepopulate%s.js' % extra,
-            'vendor/xregexp/xregexp%s.js' % extra,
+            "core.js",
+            "vendor/jquery/jquery%s.js" % extra,
+            "jquery.init.js",
+            "admin/RelatedObjectLookups.js",
+            "actions%s.js" % extra,
+            "urlify.js",
+            "prepopulate%s.js" % extra,
+            "vendor/xregexp/xregexp%s.js" % extra,
         ]
-        return forms.Media(js=[static('admin/js/%s' % url) for url in js])
+        return forms.Media(js=[static("admin/js/%s" % url) for url in js])
 
     def _export(self, form=None):
         if form is None:
             form = self.get_export_form()
         ctx = {
-            'form': form,
-            'back': '?%s' % '&'.join(['%s=%s' % param for param in self.request.GET.items()
-                                      if param[0] != EXPORT_VAR]),
+            "form": form,
+            "back": "?%s"
+            % "&".join(
+                [
+                    "%s=%s" % param
+                    for param in self.request.GET.items()
+                    if param[0] != EXPORT_VAR
+                ]
+            ),
         }
-        return render(self.request, 'admin/export.html', ctx)
+        return render(self.request, "admin/export.html", ctx)
 
     def post(self, request, *args, **kwargs):
         self.report = self.report_class(*args, **kwargs)
@@ -262,9 +280,9 @@ class ReportView(TemplateView, FormMixin):
         form = self.get_export_form(data=self.request.POST)
         if form.is_valid():
             context = self.get_context_data(**kwargs)
-            filename = context['title'].lower().replace(' ', '_')
-            response =  HttpResponse(content_type='text/csv')
-            response['Content-Disposition'] = 'attachment;filename="%s.csv"' % filename
+            filename = context["title"].lower().replace(" ", "_")
+            response = HttpResponse(content_type="text/csv")
+            response["Content-Disposition"] = 'attachment;filename="%s.csv"' % filename
             self.report.to_csv(response, **form.cleaned_data)
             return response
         return self._export(form=form)
@@ -279,19 +297,17 @@ class ReportView(TemplateView, FormMixin):
 
     def get_form_kwargs(self):
         kwargs = super(ReportView, self).get_form_kwargs()
-        if self.request.method in ('GET', 'POST'):
+        if self.request.method in ("GET", "POST"):
             form_data = self.request.GET.copy()
             for key in CONTROL_VARS:
                 if key in form_data:
                     del form_data[key]
             if form_data:
-                kwargs.update({
-                    'data': form_data,
-                })
+                kwargs.update(
+                    {"data": form_data,}
+                )
             else:
-                kwargs.update({
-                    'data': kwargs['initial']
-                })
+                kwargs.update({"data": kwargs["initial"]})
         return kwargs
 
     def get_form(self, form_class=None):
@@ -305,26 +321,30 @@ class ReportView(TemplateView, FormMixin):
 
     def get_context_data(self, **kwargs):
         kwargs = super(ReportView, self).get_context_data(**kwargs)
-        kwargs['media'] = self.media
+        kwargs["media"] = self.media
         form = self.get_form(self.get_form_class())
         if form is not None:
-            kwargs['form'] = form
+            kwargs["form"] = form
             if form.is_valid():
                 self.report.set_params(**form.cleaned_data)
         rl = ReportList(self.request, self.report)
-        kwargs.update({
-            'rl': rl,
-            'opts': Opts(self.report),
-            'title': self.report.get_title(),
-            'has_filters': self.get_form_class() is not None,
-            'help_text': self.report.get_help_text(),
-            'description': self.report.get_description(),
-            'export_path': rl.get_query_string({EXPORT_VAR: ''}),
-            'totals': self.report.get_has_totals(),
-            'totals_on_top': self.report.totals_on_top,
-            'suit': (('suit' in settings.INSTALLED_APPS) or
-                     ('bootstrap_admin' in settings.INSTALLED_APPS)),
-        })
+        kwargs.update(
+            {
+                "rl": rl,
+                "opts": Opts(self.report),
+                "title": self.report.get_title(),
+                "has_filters": self.get_form_class() is not None,
+                "help_text": self.report.get_help_text(),
+                "description": self.report.get_description(),
+                "export_path": rl.get_query_string({EXPORT_VAR: ""}),
+                "totals": self.report.get_has_totals(),
+                "totals_on_top": self.report.totals_on_top,
+                "suit": (
+                    ("suit" in settings.INSTALLED_APPS)
+                    or ("bootstrap_admin" in settings.INSTALLED_APPS)
+                ),
+            }
+        )
         return kwargs
 
     def get_template_names(self):

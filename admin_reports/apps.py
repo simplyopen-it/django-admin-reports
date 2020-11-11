@@ -4,10 +4,10 @@ from .sites import site
 
 
 class AdminReportConfig(AppConfig):
-    name = 'admin_reports'
+    name = "admin_reports"
 
     def autodiscover(self):
-        autodiscover_modules('reports', register_to=site)
+        autodiscover_modules("reports", register_to=site)
 
     def ready(self):
         self.autodiscover()
