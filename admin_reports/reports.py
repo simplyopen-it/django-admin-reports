@@ -122,8 +122,7 @@ class Report(object):
             # TODO
             pass
         elif pnd and self._data_type == "df":
-            # TODO
-            pass
+            self._totals = self._results.agg(self.auto_totals)
         else:
             for field_name, _ in self.get_fields():
                 func = self.auto_totals.get(field_name, False)
@@ -131,8 +130,8 @@ class Report(object):
                     self._totals[field_name] = func(
                         [row[field_name] for row in self._results]
                     )
-                else:
-                    self._totals[field_name] = ""
+                # else:
+                #     self._totals[field_name] = ""
         self._evaluated_totals = True
 
     def _items(self, record):
@@ -184,10 +183,15 @@ class Report(object):
             if not self._evaluated_totals and self.auto_totals is not None:
                 self._eval_totals()
         if self._data_type == "qs":
-            return dict(self._totals)
+            totals_dict = dict(self._totals)
         elif self._data_type == "df":
-            return self._totals.to_dict()
-        return self._totals
+            totals_dict = self._totals.to_dict()
+        else:
+            totals_dict = self._totals
+        return {
+            field_name: totals_dict.get(field_name, "")
+            for field_name, _ in self.get_fields()
+        }
 
     def get_formatting(self):
         if self.formatting is not None:
@@ -287,14 +291,14 @@ class Report(object):
 
     @property
     def results(self):
-        return [tuple([elem for elem in record]) for record in self.iter_results()]
+        return [tuple(elem for elem in record) for record in self.iter_results()]
 
     def iter_totals(self):
         return self._items(self.get_totals())
 
     @property
     def totals(self):
-        return tuple([elem for elem in self.iter_totals()])
+        return tuple(elem for elem in self.iter_totals())
 
     def aggregate(self, **kwargs):
         """ Implement here your data elaboration.
